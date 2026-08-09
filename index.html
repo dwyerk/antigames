@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Antigravity Sand: Pattern Emulation Arcade (Antigames #1)</title>
+
+    <!-- Google Fonts for Pixel Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+
+    <script type="module" crossorigin src="./assets/index-D3_jB44Y.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-DjIVB5kn.css">
+  </head>
+  <body>
+    <div id="app" class="crt-enabled">
+      <!-- Retro Header Navbar -->
+      <header class="game-header retro-border">
+        <div class="header-brand">
+          <span class="brand-badge">ANTIGAMES #1</span>
+          <h1 class="game-title">SAND ART PATTERN ARCADE</h1>
+        </div>
+
+        <!-- Arcade Stats -->
+        <div class="arcade-stats-bar">
+          <div class="stat-pill">
+            <span class="pill-label">STAGE</span>
+            <span id="stat-stage" class="pill-value">1</span>
+          </div>
+          <div class="stat-pill">
+            <span class="pill-label">SCORE</span>
+            <span id="stat-score" class="pill-value">0</span>
+          </div>
+          <div class="stat-pill">
+            <span class="pill-label">SEALED BOTTLES</span>
+            <span id="stat-bottles" class="pill-value">🏆 0</span>
+          </div>
+        </div>
+
+        <!-- System Controls -->
+        <div class="header-controls">
+          <button id="btn-gallery" class="icon-btn" title="View Sealed Sand Art Gallery">🖼️ Gallery</button>
+          <button id="btn-crt" class="icon-btn" title="Toggle Retro CRT Scanlines">📺 CRT</button>
+          <button id="btn-sound" class="icon-btn" title="Toggle Retro SFX">🔊 Sound</button>
+        </div>
+      </header>
+
+      <!-- Main Game Arena -->
+      <main class="game-container">
+        <!-- Left Side: Canvas Simulation Viewport -->
+        <section class="canvas-wrapper retro-border">
+          <div class="bottle-frame">
+            <canvas id="sim-canvas" width="960" height="640"></canvas>
+            <div id="crt-overlay" class="crt-lines"></div>
+          </div>
+
+          <!-- Bottom Control Bar (Flow Toggle, Play, Pause, Fast-Forward, Clear) -->
+          <div class="sim-controls retro-border">
+            <button id="btn-toggle-stream" class="control-btn active" title="Toggle Sand Stream Flow">🌊 Flow: ON</button>
+            <button id="btn-play" class="control-btn active" title="Play Simulation">▶ Play</button>
+            <button id="btn-pause" class="control-btn" title="Pause Simulation">⏸ Pause</button>
+            <button id="btn-speed" class="control-btn" title="Toggle 2x Speed">⏩ 1x</button>
+            <button id="btn-reset" class="control-btn danger" title="Clear Container">🔄 Clear Vessel</button>
+          </div>
+        </section>
+
+        <!-- Right Side: Target Blueprint & Pattern Accuracy Sidebar -->
+        <aside class="sidebar retro-border">
+          <!-- Target Sand Art Blueprint Card -->
+          <div class="card blueprint-card">
+            <div class="blueprint-header">
+              <h3>🎨 TARGET BLUEPRINT</h3>
+              <span id="blueprint-layer-count" class="badge-layers">3 Layers</span>
+            </div>
+            <!-- Stack preview of target layers -->
+            <div id="blueprint-stack" class="blueprint-stack retro-border">
+              <!-- Dynamically populated target layer bars -->
+            </div>
+            <p id="vessel-hint" class="vessel-hint">Pour matching sand layers from bottom to top to replicate the target pattern!</p>
+          </div>
+
+          <!-- Real-Time Pattern Match Accuracy Gauge Card -->
+          <div class="card accuracy-card">
+            <div class="gauge-header">
+              <h3>🎯 PATTERN ACCURACY</h3>
+              <span id="accuracy-score-text" class="accuracy-score">0% (Grade C)</span>
+            </div>
+            <div class="progress-bar-container retro-border">
+              <div id="accuracy-progress-bar" class="progress-bar-fill accuracy-fill" style="width: 0%;"></div>
+            </div>
+            <div class="vessel-fill-sub">
+              <span>Vessel Volume: <strong id="vessel-fill-pct">0% / 70%</strong></span>
+            </div>
+          </div>
+
+          <!-- Active Emitter Stream Inspector -->
+          <div class="card stream-card">
+            <div class="stream-header">
+              <span class="stream-label">CURRENT SAND STREAM:</span>
+            </div>
+            <div class="active-stream-box retro-border">
+              <span id="stream-icon" class="stream-icon">⏳</span>
+              <div class="stream-details">
+                <h4 id="stream-name">Sunset Gold Sand</h4>
+                <span id="stream-type-tag" class="stream-tag">Gravity Layering</span>
+              </div>
+            </div>
+            <p id="stream-desc" class="stream-desc">Golden sand stream that cascades and stacks under gravity.</p>
+          </div>
+
+          <!-- Sand Color Palette Selector -->
+          <div class="card palette-card">
+            <div class="palette-header">
+              <h3>🎨 Sand Color Palette</h3>
+              <span class="hint-small">Hotkeys: 1-8 | Q/E</span>
+            </div>
+            <div id="element-toolbar" class="element-toolbar">
+              <!-- Dynamically populated stream buttons -->
+            </div>
+          </div>
+        </aside>
+      </main>
+
+      <!-- Footer Info Bar -->
+      <footer class="game-footer">
+        <span>Antigames #1 • Sand Art Pattern Emulation Arcade</span>
+        <span>Spacebar: Next Stage | Q/E: Switch Color | Move Cursor to Stream</span>
+      </footer>
+
+      <!-- Modal Dialog Overlay Container -->
+      <div id="modal-overlay" class="modal-overlay hidden"></div>
+    </div>
+
+    <!-- Main JavaScript Bootloader -->
+  </body>
+</html>
