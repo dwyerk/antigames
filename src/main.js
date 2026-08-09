@@ -377,27 +377,48 @@ class SandPatternArcade {
   }
 
   renderCanvas() {
+    // 1. Fill background once
     this.ctx.fillStyle = ELEMENT_COLORS[ELEMENT.EMPTY];
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    for (let y = 0; y < GRID_HEIGHT; y++) {
-      for (let x = 0; x < GRID_WIDTH; x++) {
-        const type = this.engine.get(x, y);
-        if (type === ELEMENT.EMPTY) continue;
+    // 2. High-performance batched color rendering (removes per-particle alpha overdraw for 60 FPS on Kindle Fire)
+    const activeTypes = [
+      ELEMENT.BOTTLE,
+      ELEMENT.SAND_GOLD,
+      ELEMENT.SAND_BLUE,
+      ELEMENT.SAND_PINK,
+      ELEMENT.SAND_GREEN,
+      ELEMENT.ANTI_GRAV,
+      ELEMENT.LAVA,
+      ELEMENT.ACID,
+      ELEMENT.LASER_SAND,
+      ELEMENT.ANTI_MATTER,
+      ELEMENT.STEAM,
+      ELEMENT.RAMP_LEFT,
+      ELEMENT.RAMP_RIGHT,
+    ];
 
-        const px = x * CELL_SIZE;
-        const py = y * CELL_SIZE;
+    for (let i = 0; i < activeTypes.length; i++) {
+      const type = activeTypes[i];
+      const color = ELEMENT_COLORS[type];
+      if (!color) continue;
 
-        this.ctx.fillStyle = ELEMENT_COLORS[type] || '#ffffff';
-        this.ctx.fillRect(px, py, CELL_SIZE, CELL_SIZE);
+      let colorSet = false;
 
-        if (ELEMENT_GLOW[type]) {
-          this.ctx.fillStyle = ELEMENT_GLOW[type];
-          this.ctx.fillRect(px - 2, py - 2, CELL_SIZE + 4, CELL_SIZE + 4);
+      for (let y = 0; y < GRID_HEIGHT; y++) {
+        for (let x = 0; x < GRID_WIDTH; x++) {
+          if (this.engine.get(x, y) === type) {
+            if (!colorSet) {
+              this.ctx.fillStyle = color;
+              colorSet = true;
+            }
+            this.ctx.fillRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+          }
         }
       }
     }
 
+    // Render Target Layer division lines & target fill line on canvas
     const bottomY = GRID_HEIGHT - 25;
     const totalVolumeY = 110;
 
