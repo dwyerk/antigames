@@ -207,12 +207,16 @@ class SandPatternArcade {
       const info = ELEMENT_INFO[typeId];
       if (!info) return;
 
+      const shortName = info.name.replace(' Sand', '').replace('ic Solvent', '').replace('en ', '');
+
       const btn = document.createElement('button');
       btn.className = `elem-btn ${typeId === this.selectedElement ? 'selected' : ''}`;
       btn.dataset.type = typeId;
+      btn.title = info.name;
       btn.innerHTML = `
+        <span class="elem-swatch" style="background-color: ${ELEMENT_COLORS[typeId]};"></span>
         <span class="elem-icon">${info.icon}</span>
-        <span class="elem-name">${info.name}</span>
+        <span class="elem-name">${shortName}</span>
         <span class="elem-key">${index + 1}</span>
       `;
       btn.onclick = () => this.selectElement(typeId);
