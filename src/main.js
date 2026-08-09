@@ -101,14 +101,25 @@ class SandPatternArcade {
       this.resetVessel();
     };
 
+    // Canvas Mouse & Touch Pointer Drag Listeners (Mobile Friendly)
     this.canvas.addEventListener('mouseenter', () => this.isHoveringCanvas = true);
     this.canvas.addEventListener('mouseleave', () => this.isHoveringCanvas = false);
 
     this.canvas.addEventListener('mousemove', (e) => this.updateCursorPos(e));
+    
+    this.canvas.addEventListener('touchstart', (e) => {
+      this.isHoveringCanvas = true;
+      if (e.touches.length > 0) this.updateCursorPos(e.touches[0]);
+    }, { passive: true });
+
     this.canvas.addEventListener('touchmove', (e) => {
       this.isHoveringCanvas = true;
-      this.updateCursorPos(e.touches[0]);
+      if (e.touches.length > 0) this.updateCursorPos(e.touches[0]);
     }, { passive: true });
+
+    window.addEventListener('touchend', () => {
+      this.isHoveringCanvas = false;
+    });
 
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Space' || e.code === 'Enter') {
@@ -235,7 +246,6 @@ class SandPatternArcade {
     const vesselList = Object.values(VESSEL_TYPES);
     this.vesselType = vesselList[(stageNum - 1) % vesselList.length];
 
-    // Generate procedural sand art target blueprint
     this.targetDesign = generateTargetDesign(stageNum);
     this.targetFillPct = this.targetDesign.targetTotalPct;
 
@@ -384,7 +394,6 @@ class SandPatternArcade {
       }
     }
 
-    // Render Target Layer division lines & target fill line on canvas
     const bottomY = GRID_HEIGHT - 25;
     const totalVolumeY = 110;
 
@@ -404,7 +413,6 @@ class SandPatternArcade {
       });
     }
 
-    // Render Target Fill Line at top
     const targetY = Math.floor(GRID_HEIGHT - (this.targetFillPct / 100) * (GRID_HEIGHT - 35));
     this.ctx.save();
     this.ctx.strokeStyle = 'rgba(255, 0, 170, 0.8)';
@@ -416,7 +424,6 @@ class SandPatternArcade {
     this.ctx.stroke();
     this.ctx.restore();
 
-    // Render Glowing Target Reticle Cursor Nozzle
     if (this.isHoveringCanvas && this.streamEnabled && !this.isStageComplete) {
       const cx = this.cursorPos.x * CELL_SIZE + CELL_SIZE / 2;
       const cy = this.cursorPos.y * CELL_SIZE + CELL_SIZE / 2;
@@ -443,7 +450,6 @@ class SandPatternArcade {
   }
 }
 
-// Instantiate game on page load
 window.addEventListener('DOMContentLoaded', () => {
   new SandPatternArcade();
 });
