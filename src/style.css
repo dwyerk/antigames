@@ -724,6 +724,18 @@ body {
   gap: 14px;
 }
 
+.player-mode-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.player-mode-toggle button {
+  font-size: 9px !important;
+  padding: 8px 14px !important;
+}
+
 .world-tabs-bar {
   display: flex;
   gap: 8px;

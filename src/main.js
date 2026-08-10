@@ -50,7 +50,7 @@ class AntigamesApp {
 
     this.overworldController = new OverworldMapController(
       document.getElementById('overworld-map-overlay'),
-      (worldIdx, levelIdx) => {
+      (worldIdx, levelIdx, playerCount) => {
         if (!this.catEngine) {
           this.catEngine = new CatGameEngine(this.canvas, this.ctx, {
             onLevelComplete: (completedWorld, nextLvl) => {
@@ -59,7 +59,7 @@ class AntigamesApp {
             }
           });
         }
-        this.catEngine.loadLevel(worldIdx, levelIdx);
+        this.catEngine.loadLevel(worldIdx, levelIdx, playerCount);
       }
     );
 
@@ -95,8 +95,8 @@ class AntigamesApp {
 
       if (!this.catEngine) {
         this.catEngine = new CatGameEngine(this.canvas, this.ctx, {
-          onLevelComplete: (nextLvl) => {
-            this.overworldController.unlockLevel(nextLvl);
+          onLevelComplete: (completedWorld, nextLvl) => {
+            this.overworldController.unlockNextLevel(completedWorld, nextLvl);
             this.overworldController.show();
           }
         });
@@ -178,7 +178,7 @@ class AntigamesApp {
 
     resetBtn.onclick = () => {
       if (this.activeGameMode === 'mario-cat') {
-        this.catEngine.loadLevel(this.catEngine.levelIndex);
+        this.catEngine.loadLevel(this.catEngine.worldIndex, this.catEngine.levelIndex, this.catEngine.playerCount);
       } else {
         this.resetVessel();
       }

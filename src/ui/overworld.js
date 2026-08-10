@@ -6,10 +6,11 @@ export class OverworldMapController {
     this.container = container;
     this.onSelectLevel = onSelectLevel;
 
+    this.playerCount = 1; // 1 or 2 Players
     this.currentWorldIdx = 0;
     this.currentNodeIdx = 0;
 
-    // Highest unlocked node per world: { 0: 0, 1: 0, 2: 0, 3: 0 }
+    // Highest unlocked level per world: { 0: 0, 1: 0, 2: 0, 3: 0 }
     this.unlockedLevels = { 0: 0, 1: 0, 2: 0, 3: 0 };
 
     this.isVisible = false;
@@ -21,11 +22,18 @@ export class OverworldMapController {
 
   unlockNextLevel(worldIdx, levelNum) {
     if (levelNum >= 10 && worldIdx < 3) {
-      // Unlock next world!
+      // Completed World Fortress -> Unlock next World!
       this.unlockedLevels[worldIdx + 1] = Math.max(this.unlockedLevels[worldIdx + 1] || 0, 0);
+      this.currentWorldIdx = worldIdx + 1;
+      this.currentNodeIdx = 0;
     } else {
       this.unlockedLevels[worldIdx] = Math.max(this.unlockedLevels[worldIdx] || 0, levelNum);
+      const world = WORLDS[worldIdx];
+      // Automatically advance map cursor to newly unlocked level node!
+      this.currentNodeIdx = Math.min(world.nodes.length - 1, levelNum);
     }
+
+    this.render();
   }
 
   bindEvents() {
@@ -71,7 +79,7 @@ export class OverworldMapController {
     this.hide();
 
     if (this.onSelectLevel) {
-      this.onSelectLevel(this.currentWorldIdx, node.levelNum - 1);
+      this.onSelectLevel(this.currentWorldIdx, node.levelNum - 1, this.playerCount);
     }
   }
 
@@ -102,7 +110,7 @@ export class OverworldMapController {
       `;
     }).join('');
 
-    // SMB3 8x5 Grid Map
+    // SMB3 8x4 Grid Map
     const gridCols = 8;
     const gridRows = 4;
     let gridHTML = '';
@@ -142,6 +150,12 @@ export class OverworldMapController {
           <h2 style="font-size:18px; color:var(--neon-yellow);">${world.name}</h2>
         </div>
 
+        <!-- Player Count Selector (1P Solo vs 2P Local Co-Op) -->
+        <div class="player-mode-toggle">
+          <button id="btn-mode-1p" class="retro-btn ${this.playerCount === 1 ? 'primary active' : ''}">🐱 1-PLAYER SOLO</button>
+          <button id="btn-mode-2p" class="retro-btn ${this.playerCount === 2 ? 'primary active' : ''}">🐱🐱 2-PLAYER LOCAL CO-OP</button>
+        </div>
+
         <!-- World Selection Tabs -->
         <div class="world-tabs-bar">
           ${tabsHTML}
@@ -154,8 +168,8 @@ export class OverworldMapController {
 
         <div class="overworld-details card">
           <h3>SELECTED LEVEL: <span style="color:var(--neon-yellow);">${currentNode ? currentNode.name : 'Level 1'}</span></h3>
-          <p style="font-size:16px; color:var(--text-muted); margin-top:4px;">
-            Walk map with <strong>A / D</strong> or <strong>Arrow Keys</strong>. Press <strong>SPACEBAR</strong> to start level!
+          <p style="font-size:15px; color:var(--text-muted); margin-top:4px;">
+            Mode: <strong>${this.playerCount === 1 ? '1-Player Solo Cat (WASD / Arrows)' : '2-Player Local Co-Op (P1: WASD | P2: Arrows)'}</strong>
           </p>
           <div class="modal-buttons" style="margin-top:10px;">
             <button id="btn-start-map-level" class="retro-btn primary">ENTER LEVEL ➔ [SPACEBAR]</button>
@@ -163,6 +177,16 @@ export class OverworldMapController {
         </div>
       </div>
     `;
+
+    document.getElementById('btn-mode-1p').onclick = () => {
+      this.playerCount = 1;
+      this.render();
+    };
+
+    document.getElementById('btn-mode-2p').onclick = () => {
+      this.playerCount = 2;
+      this.render();
+    };
 
     document.querySelectorAll('.world-tab').forEach(tab => {
       tab.onclick = () => {

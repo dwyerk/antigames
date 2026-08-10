@@ -11,6 +11,7 @@ export class CatGameEngine {
     this.ctx = ctx;
     this.callbacks = callbacks || {};
 
+    this.playerCount = 1; // 1 or 2 Players
     this.worldIndex = 0;
     this.levelIndex = 0;
     this.level = null;
@@ -33,6 +34,10 @@ export class CatGameEngine {
     this.bindInputs();
   }
 
+  setPlayerCount(count = 1) {
+    this.playerCount = count;
+  }
+
   bindInputs() {
     window.addEventListener('keydown', (e) => {
       this.keys[e.code] = true;
@@ -42,7 +47,9 @@ export class CatGameEngine {
     });
   }
 
-  loadLevel(worldIdx = 0, levelIdx = 0) {
+  loadLevel(worldIdx = 0, levelIdx = 0, playerCount = null) {
+    if (playerCount !== null) this.playerCount = playerCount;
+
     this.worldIndex = worldIdx;
     this.levelIndex = levelIdx;
     this.level = getLevelData(worldIdx, levelIdx);
@@ -68,8 +75,12 @@ export class CatGameEngine {
         color: '#ff9900',
         earColor: '#cc6600',
         score: 0,
-      },
-      {
+      }
+    ];
+
+    // Spawn Player 2 if 2-Player mode is enabled
+    if (this.playerCount >= 2) {
+      this.players.push({
         id: 2,
         name: 'Shadow Cat',
         x: p2SpawnX,
@@ -84,8 +95,8 @@ export class CatGameEngine {
         color: '#333b48',
         earColor: '#1a202c',
         score: 0,
-      }
-    ];
+      });
+    }
 
     // Spawn Mice
     this.mice = this.level.mice.map(m => ({
@@ -129,19 +140,26 @@ export class CatGameEngine {
 
   updateLaserFrenzy() {
     this.laserTimer++;
-    if (!this.laserActive && this.laserTimer > 400 && Math.random() < 0.02) {
+
+    // Random trigger for Laser Frenzy mode
+    if (!this.laserActive && this.laserTimer > 350 && Math.random() < 0.025) {
       this.laserActive = true;
       this.laserTimer = 0;
-      const p1 = this.players[0];
-      this.laserDot = { x: p1.x + 200, y: 350, vx: 2.5 };
       SFX.sfxElectricitySpark();
     }
 
-    if (this.laserActive && this.laserDot) {
-      this.laserDot.x += this.laserDot.vx;
-      if (this.laserDot.x > (this.level.width - 5) * TILE_SIZE || this.laserDot.x < 100) {
-        this.laserDot.vx *= -1;
-      }
+    if (this.laserActive) {
+      // Find leading player position
+      const leadPlayer = this.players.reduce((max, p) => p.x > max.x ? p : max, this.players[0]);
+
+      // Position laser dot IN FRONT of the leading player at all times!
+      const oscX = Math.sin(this.laserTimer * 0.1) * 35;
+      const oscY = Math.sin(this.laserTimer * 0.08) * 40;
+
+      this.laserDot = {
+        x: leadPlayer.x + 180 + oscX,
+        y: Math.max(100, Math.min(420, leadPlayer.y - 20 + oscY))
+      };
 
       if (this.laserTimer > 300) {
         this.laserActive = false;
@@ -151,35 +169,37 @@ export class CatGameEngine {
   }
 
   updatePlayers() {
-    // Player 1 Controls (WASD)
+    // Player 1 Controls (WASD or Arrow keys in 1P mode)
     const p1 = this.players[0];
     let speed1 = p1.isBig ? 4.5 : 3.8;
-    if (this.laserActive) speed1 *= 1.4; // Laser Frenzy speed boost
+    if (this.laserActive) speed1 *= 1.45; // Laser Frenzy speed boost
 
     p1.vx = 0;
-    if (this.keys['KeyA']) p1.vx = -speed1;
-    if (this.keys['KeyD']) p1.vx = speed1;
-    if (this.keys['KeyW'] && p1.isGrounded) {
+    if (this.keys['KeyA'] || (this.playerCount === 1 && this.keys['ArrowLeft'])) p1.vx = -speed1;
+    if (this.keys['KeyD'] || (this.playerCount === 1 && this.keys['ArrowRight'])) p1.vx = speed1;
+    if ((this.keys['KeyW'] || (this.playerCount === 1 && this.keys['ArrowUp'])) && p1.isGrounded) {
       p1.vy = p1.isBig ? -12.5 : -11.0;
       p1.isGrounded = false;
       SFX.sfxDropSand();
     }
 
-    // Player 2 Controls (Arrow Keys)
-    const p2 = this.players[1];
-    let speed2 = p2.isBig ? 4.5 : 3.8;
-    if (this.laserActive) speed2 *= 1.4;
+    // Player 2 Controls (Arrow Keys in 2P mode)
+    if (this.playerCount >= 2 && this.players[1]) {
+      const p2 = this.players[1];
+      let speed2 = p2.isBig ? 4.5 : 3.8;
+      if (this.laserActive) speed2 *= 1.45;
 
-    p2.vx = 0;
-    if (this.keys['ArrowLeft']) p2.vx = -speed2;
-    if (this.keys['ArrowRight']) p2.vx = speed2;
-    if (this.keys['ArrowUp'] && p2.isGrounded) {
-      p2.vy = p2.isBig ? -12.5 : -11.0;
-      p2.isGrounded = false;
-      SFX.sfxDropSand();
+      p2.vx = 0;
+      if (this.keys['ArrowLeft']) p2.vx = -speed2;
+      if (this.keys['ArrowRight']) p2.vx = speed2;
+      if (this.keys['ArrowUp'] && p2.isGrounded) {
+        p2.vy = p2.isBig ? -12.5 : -11.0;
+        p2.isGrounded = false;
+        SFX.sfxDropSand();
+      }
     }
 
-    // Apply gravity & physics to both cats
+    // Apply gravity & physics
     this.players.forEach(p => {
       if (p.invulnerableTimer > 0) p.invulnerableTimer--;
 
@@ -314,16 +334,17 @@ export class CatGameEngine {
       this.dogs.forEach(d => {
         if (!d.defeated && this.checkAABB(p, d)) {
           // Check if cat jumped on top of dog's head
-          const jumpedOnHead = (p.vy > 0 && p.y + p.h - p.vy <= d.y + 12);
+          const jumpedOnHead = (p.vy > 0 && p.y + p.h - p.vy <= d.y + 14);
 
-          if (jumpedOnHead || p.isBig || this.laserActive) {
-            // Stomp/Defeat dog!
+          // ONLY defeat dogs if jumping on their head OR during Laser Frenzy mode!
+          // Big Cat does NOT automatically crush dogs on horizontal contact!
+          if (jumpedOnHead || this.laserActive) {
             d.defeated = true;
-            p.vy = -7.0; // Bounce up!
+            p.vy = -7.5; // Bounce up!
             p.score += 300;
             SFX.sfxGoalTriggered(1);
           } else {
-            // Cat takes damage!
+            // Take damage! (Big Cat shrinks back to Small Cat, Small Cat dies/respawns)
             this.handlePlayerDamage(p);
           }
         }
@@ -366,11 +387,15 @@ export class CatGameEngine {
     const p1 = this.players[0];
     const p2 = this.players[1];
 
-    const dist = Math.abs(p1.x - p2.x);
-    this.isSplitScreen = dist > 450; // Enable split screen if cats move far apart
-
-    this.cameraX1 = Math.max(0, Math.min((this.level.width * TILE_SIZE) - this.canvas.width, p1.x - 300));
-    this.cameraX2 = Math.max(0, Math.min((this.level.width * TILE_SIZE) - this.canvas.width, p2.x - 300));
+    if (this.playerCount >= 2 && p2) {
+      const dist = Math.abs(p1.x - p2.x);
+      this.isSplitScreen = dist > 450;
+      this.cameraX1 = Math.max(0, Math.min((this.level.width * TILE_SIZE) - this.canvas.width, p1.x - 300));
+      this.cameraX2 = Math.max(0, Math.min((this.level.width * TILE_SIZE) - this.canvas.width, p2.x - 300));
+    } else {
+      this.isSplitScreen = false;
+      this.cameraX1 = Math.max(0, Math.min((this.level.width * TILE_SIZE) - this.canvas.width, p1.x - 450));
+    }
   }
 
   triggerStageComplete() {
@@ -386,7 +411,7 @@ export class CatGameEngine {
   render() {
     if (!this.level) return;
 
-    if (this.isSplitScreen) {
+    if (this.isSplitScreen && this.players[1]) {
       // Draw Dual Split-Screen (P1 Left, P2 Right)
       const halfW = this.canvas.width / 2;
 
@@ -411,7 +436,9 @@ export class CatGameEngine {
       this.ctx.fillRect(halfW - 2, 0, 4, this.canvas.height);
     } else {
       // Single Shared Camera
-      const avgX = (this.players[0].x + this.players[1].x) / 2;
+      const p1 = this.players[0];
+      const p2 = this.players[1];
+      const avgX = p2 ? (p1.x + p2.x) / 2 : p1.x;
       const camX = Math.max(0, Math.min((this.level.width * TILE_SIZE) - this.canvas.width, avgX - 450));
       this.renderViewport(camX, 0, this.canvas.width);
     }
@@ -492,15 +519,15 @@ export class CatGameEngine {
       this.ctx.fillRect(dx + 2, d.y + 4, d.w - 4, 4);
     });
 
-    // 6. Draw AI Laser Frenzy Red Dot
+    // 6. Draw AI Laser Frenzy Red Dot (Positioned 180px in front of leading player)
     if (this.laserActive && this.laserDot) {
       const lx = this.laserDot.x - camX + screenOffsetX;
       this.ctx.save();
       this.ctx.fillStyle = '#ff0033';
       this.ctx.shadowColor = '#ff0033';
-      this.ctx.shadowBlur = 12;
+      this.ctx.shadowBlur = 14;
       this.ctx.beginPath();
-      this.ctx.arc(lx, this.laserDot.y, 8, 0, Math.PI * 2);
+      this.ctx.arc(lx, this.laserDot.y, 10, 0, Math.PI * 2);
       this.ctx.fill();
       this.ctx.restore();
     }
