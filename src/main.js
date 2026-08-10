@@ -1,4 +1,4 @@
-// Main Bootloader for Sand Art Pattern Arcade (Antigames #1)
+// Main Bootloader & Multi-Game Arcade Hub for Antigames
 import { GRID_WIDTH, GRID_HEIGHT, CELL_SIZE, ELEMENT, ELEMENT_COLORS, ELEMENT_GLOW, ELEMENT_INFO } from './engine/constants.js';
 import { SimulationEngine } from './engine/simulation.js';
 import { generateVesselMask, VESSEL_TYPES } from './levels/bottles.js';
@@ -6,15 +6,18 @@ import { generateTargetDesign, evaluateAccuracy } from './modes/procedural.js';
 import { Storage } from './storage.js';
 import { SFX } from './audio/sfx.js';
 import { UIController } from './ui/components.js';
+import { MainMenuController } from './ui/menu.js';
 
-class SandPatternArcade {
+class AntigamesApp {
   constructor() {
     this.canvas = document.getElementById('sim-canvas');
     this.ctx = this.canvas.getContext('2d', { alpha: false });
 
     this.engine = new SimulationEngine();
 
-    // Game state
+    // App & Game Mode State
+    this.activeGameMode = 'pattern-arcade'; // 'pattern-arcade' | 'sandbox' | 'laser-puzzle'
+
     this.stageNumber = 1;
     this.score = 0;
     this.bottlesSealed = 0;
@@ -42,14 +45,46 @@ class SandPatternArcade {
       restartArcade: () => this.startArcade(),
     });
 
+    this.menuController = new MainMenuController((gameId) => {
+      this.switchGameMode(gameId);
+    });
+
     this.init();
   }
 
   init() {
     this.bindEvents();
     this.renderToolbar();
-    this.startArcade();
     this.startLoop();
+  }
+
+  switchGameMode(gameId) {
+    this.activeGameMode = gameId;
+    const badge = document.getElementById('game-mode-badge');
+    const bpCard = document.getElementById('blueprint-card');
+    const accCard = document.getElementById('accuracy-card');
+
+    if (gameId === 'sandbox') {
+      badge.textContent = 'KINETIC SAND SANDBOX';
+      bpCard.classList.add('hidden');
+      accCard.classList.add('hidden');
+      this.stageNumber = 1;
+      this.loadStage(1);
+    } else if (gameId === 'laser-puzzle') {
+      badge.textContent = 'LASER BOUNCE CHALLENGE';
+      bpCard.classList.remove('hidden');
+      accCard.classList.remove('hidden');
+      this.selectedElement = ELEMENT.LASER_SAND;
+      this.selectElement(ELEMENT.LASER_SAND);
+      this.stageNumber = 3;
+      this.loadStage(3);
+    } else {
+      // Pattern Arcade
+      badge.textContent = 'SAND ART PATTERN ARCADE';
+      bpCard.classList.remove('hidden');
+      accCard.classList.remove('hidden');
+      this.startArcade();
+    }
   }
 
   bindEvents() {
@@ -101,7 +136,7 @@ class SandPatternArcade {
       this.resetVessel();
     };
 
-    // Canvas Mouse & Touch Pointer Drag Listeners (Mobile Friendly)
+    // Canvas Mouse & Touch Pointer Drag Listeners
     this.canvas.addEventListener('mouseenter', () => this.isHoveringCanvas = true);
     this.canvas.addEventListener('mouseleave', () => this.isHoveringCanvas = false);
 
@@ -257,6 +292,11 @@ class SandPatternArcade {
     const { mask, capacity, innerMask } = generateVesselMask(this.vesselType);
     this.engine.loadBottleMask(mask, capacity, innerMask);
 
+    if (this.activeGameMode === 'laser-puzzle') {
+      this.engine.set(70, 80, ELEMENT.RAMP_RIGHT);
+      this.engine.set(170, 100, ELEMENT.RAMP_LEFT);
+    }
+
     this.renderBlueprintStack();
     this.updateHUD();
   }
@@ -308,7 +348,11 @@ class SandPatternArcade {
       [VESSEL_TYPES.HOURGLASS]: 'Hourglass Chamber'
     };
 
-    document.getElementById('vessel-hint').textContent = `Stage ${this.stageNumber}: Emulate the target blueprint layers in the ${vesselNames[this.vesselType] || 'Vessel'}!`;
+    if (this.activeGameMode === 'sandbox') {
+      document.getElementById('vessel-hint').textContent = `Sandbox Mode: Create freeform sand art inside the ${vesselNames[this.vesselType] || 'Vessel'}!`;
+    } else {
+      document.getElementById('vessel-hint').textContent = `Stage ${this.stageNumber}: Emulate the target blueprint layers in the ${vesselNames[this.vesselType] || 'Vessel'}!`;
+    }
   }
 
   emitContinuousStream() {
@@ -349,7 +393,10 @@ class SandPatternArcade {
         this.currentFillPct = this.engine.getFillPercentage();
         this.accuracyPct = evaluateAccuracy(this.engine.grid, GRID_WIDTH, GRID_HEIGHT, this.engine.innerMask, this.targetDesign);
         this.updateHUD();
-        this.checkStageCompletion();
+
+        if (this.activeGameMode !== 'sandbox') {
+          this.checkStageCompletion();
+        }
       }
 
       this.renderCanvas();
@@ -381,7 +428,7 @@ class SandPatternArcade {
     this.ctx.fillStyle = ELEMENT_COLORS[ELEMENT.EMPTY];
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    // 2. High-performance batched color rendering (removes per-particle alpha overdraw for 60 FPS on Kindle Fire)
+    // 2. High-performance batched color rendering
     const activeTypes = [
       ELEMENT.BOTTLE,
       ELEMENT.SAND_GOLD,
@@ -418,11 +465,11 @@ class SandPatternArcade {
       }
     }
 
-    // Render Target Layer division lines & target fill line on canvas
+    // Render Target Layer division lines & target fill line on canvas (if in Pattern Arcade mode)
     const bottomY = GRID_HEIGHT - 25;
     const totalVolumeY = 110;
 
-    if (this.targetDesign) {
+    if (this.activeGameMode === 'pattern-arcade' && this.targetDesign) {
       this.targetDesign.layers.forEach((layer) => {
         const lineY = Math.floor(bottomY - (layer.endPct / 100) * totalVolumeY);
 
@@ -438,16 +485,18 @@ class SandPatternArcade {
       });
     }
 
-    const targetY = Math.floor(GRID_HEIGHT - (this.targetFillPct / 100) * (GRID_HEIGHT - 35));
-    this.ctx.save();
-    this.ctx.strokeStyle = 'rgba(255, 0, 170, 0.8)';
-    this.ctx.lineWidth = 2.5;
-    this.ctx.setLineDash([8, 6]);
-    this.ctx.beginPath();
-    this.ctx.moveTo(30, targetY * CELL_SIZE);
-    this.ctx.lineTo(this.canvas.width - 30, targetY * CELL_SIZE);
-    this.ctx.stroke();
-    this.ctx.restore();
+    if (this.activeGameMode !== 'sandbox') {
+      const targetY = Math.floor(GRID_HEIGHT - (this.targetFillPct / 100) * (GRID_HEIGHT - 35));
+      this.ctx.save();
+      this.ctx.strokeStyle = 'rgba(255, 0, 170, 0.8)';
+      this.ctx.lineWidth = 2.5;
+      this.ctx.setLineDash([8, 6]);
+      this.ctx.beginPath();
+      this.ctx.moveTo(30, targetY * CELL_SIZE);
+      this.ctx.lineTo(this.canvas.width - 30, targetY * CELL_SIZE);
+      this.ctx.stroke();
+      this.ctx.restore();
+    }
 
     if (this.isHoveringCanvas && this.streamEnabled && !this.isStageComplete) {
       const cx = this.cursorPos.x * CELL_SIZE + CELL_SIZE / 2;
@@ -476,5 +525,5 @@ class SandPatternArcade {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  new SandPatternArcade();
+  new AntigamesApp();
 });
