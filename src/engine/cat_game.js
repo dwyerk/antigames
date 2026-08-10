@@ -1,5 +1,5 @@
 // 2D Co-Op Platformer Engine for Super Mario Cat (Antigames #4)
-import { CAT_LEVELS, TILE } from '../levels/cat_levels.js';
+import { getLevelData, TILE } from '../levels/cat_levels.js';
 import { SFX } from '../audio/sfx.js';
 
 const TILE_SIZE = 32;
@@ -11,6 +11,7 @@ export class CatGameEngine {
     this.ctx = ctx;
     this.callbacks = callbacks || {};
 
+    this.worldIndex = 0;
     this.levelIndex = 0;
     this.level = null;
 
@@ -41,9 +42,10 @@ export class CatGameEngine {
     });
   }
 
-  loadLevel(index = 0) {
-    this.levelIndex = index % CAT_LEVELS.length;
-    this.level = CAT_LEVELS[this.levelIndex];
+  loadLevel(worldIdx = 0, levelIdx = 0) {
+    this.worldIndex = worldIdx;
+    this.levelIndex = levelIdx;
+    this.level = getLevelData(worldIdx, levelIdx);
 
     const p1SpawnX = this.level.spawnP1.tileX * TILE_SIZE;
     const p1SpawnY = this.level.spawnP1.tileY * TILE_SIZE;
@@ -377,7 +379,7 @@ export class CatGameEngine {
 
     SFX.sfxVictoryFanfare();
     if (this.callbacks.onLevelComplete) {
-      this.callbacks.onLevelComplete(this.levelIndex + 1);
+      this.callbacks.onLevelComplete(this.worldIndex, this.levelIndex + 1);
     }
   }
 

@@ -1,13 +1,17 @@
-// Super Mario Bros 3 Style Overworld World Map Screen for Super Mario Cat
-import { CAT_LEVELS } from '../levels/cat_levels.js';
+// Authentic Super Mario Bros 3 Style Overworld Map Controller
+import { WORLDS } from '../levels/cat_levels.js';
 
 export class OverworldMapController {
   constructor(container, onSelectLevel) {
     this.container = container;
     this.onSelectLevel = onSelectLevel;
 
-    this.selectedNodeIndex = 0;
-    this.unlockedIndex = 0; // Highest unlocked level (0 -> 3)
+    this.currentWorldIdx = 0;
+    this.currentNodeIdx = 0;
+
+    // Highest unlocked node per world: { 0: 0, 1: 0, 2: 0, 3: 0 }
+    this.unlockedLevels = { 0: 0, 1: 0, 2: 0, 3: 0 };
+
     this.isVisible = false;
   }
 
@@ -15,9 +19,12 @@ export class OverworldMapController {
     this.bindEvents();
   }
 
-  unlockLevel(levelNum) {
-    if (levelNum > this.unlockedIndex && levelNum < CAT_LEVELS.length) {
-      this.unlockedIndex = levelNum;
+  unlockNextLevel(worldIdx, levelNum) {
+    if (levelNum >= 10 && worldIdx < 3) {
+      // Unlock next world!
+      this.unlockedLevels[worldIdx + 1] = Math.max(this.unlockedLevels[worldIdx + 1] || 0, 0);
+    } else {
+      this.unlockedLevels[worldIdx] = Math.max(this.unlockedLevels[worldIdx] || 0, levelNum);
     }
   }
 
@@ -37,17 +44,34 @@ export class OverworldMapController {
   }
 
   navigate(dir) {
-    const nextIdx = this.selectedNodeIndex + dir;
-    if (nextIdx >= 0 && nextIdx <= this.unlockedIndex) {
-      this.selectedNodeIndex = nextIdx;
+    const world = WORLDS[this.currentWorldIdx];
+    const maxUnlocked = this.unlockedLevels[this.currentWorldIdx] || 0;
+
+    const nextIdx = this.currentNodeIdx + dir;
+    if (nextIdx >= 0 && nextIdx < world.nodes.length) {
+      const node = world.nodes[nextIdx];
+      if (node.levelNum <= maxUnlocked + 1) {
+        this.currentNodeIdx = nextIdx;
+        this.render();
+      }
+    }
+  }
+
+  switchWorld(worldIdx) {
+    if (worldIdx >= 0 && worldIdx < WORLDS.length) {
+      this.currentWorldIdx = worldIdx;
+      this.currentNodeIdx = 0;
       this.render();
     }
   }
 
   launchSelectedLevel() {
+    const world = WORLDS[this.currentWorldIdx];
+    const node = world.nodes[this.currentNodeIdx];
     this.hide();
+
     if (this.onSelectLevel) {
-      this.onSelectLevel(this.selectedNodeIndex);
+      this.onSelectLevel(this.currentWorldIdx, node.levelNum - 1);
     }
   }
 
@@ -63,50 +87,94 @@ export class OverworldMapController {
   }
 
   render() {
-    let nodesHTML = CAT_LEVELS.map((lvl, index) => {
-      const isUnlocked = index <= this.unlockedIndex;
-      const isSelected = index === this.selectedNodeIndex;
-      const stateClass = isSelected ? 'selected' : isUnlocked ? 'unlocked' : 'locked';
+    const world = WORLDS[this.currentWorldIdx];
+    const maxUnlocked = this.unlockedLevels[this.currentWorldIdx] || 0;
+
+    // World Selector Tabs
+    const tabsHTML = WORLDS.map((w, idx) => {
+      const isWorldUnlocked = (idx === 0 || (this.unlockedLevels[idx - 1] && this.unlockedLevels[idx - 1] >= 10));
+      const isActive = idx === this.currentWorldIdx;
 
       return `
-        <div class="map-node ${stateClass}" data-level-idx="${index}">
-          <div class="node-icon">${isSelected ? '🐱' : isUnlocked ? '⭐' : '🔒'}</div>
-          <div class="node-label">${lvl.name}</div>
-          ${isSelected ? '<div class="node-pointer">▼</div>' : ''}
-        </div>
+        <button class="world-tab ${isActive ? 'active' : ''} ${isWorldUnlocked ? '' : 'disabled'}" data-world-idx="${idx}">
+          ${w.name}
+        </button>
       `;
-    }).join('<div class="map-path-line"></div>');
+    }).join('');
 
-    const currentLvl = CAT_LEVELS[this.selectedNodeIndex];
+    // SMB3 8x5 Grid Map
+    const gridCols = 8;
+    const gridRows = 4;
+    let gridHTML = '';
+
+    for (let r = 1; r <= gridRows; r++) {
+      for (let c = 1; c <= gridCols; c++) {
+        const nodeIdx = world.nodes.findIndex(n => n.gridX === c && n.gridY === r);
+
+        if (nodeIdx !== -1) {
+          const node = world.nodes[nodeIdx];
+          const isUnlocked = node.levelNum <= maxUnlocked + 1;
+          const isSelected = nodeIdx === this.currentNodeIdx;
+
+          let icon = '⭐';
+          if (node.type === 'fortress') icon = '🏰';
+          if (node.type === 'bonus') icon = '📦';
+
+          gridHTML += `
+            <div class="smb3-grid-cell node-cell ${isSelected ? 'selected' : isUnlocked ? 'unlocked' : 'locked'}" data-node-idx="${nodeIdx}">
+              <span class="cell-icon">${isSelected ? '🐱' : isUnlocked ? icon : '🔒'}</span>
+              <span class="cell-num">${node.name}</span>
+              ${isSelected ? '<span class="cell-pointer">▼</span>' : ''}
+            </div>
+          `;
+        } else {
+          gridHTML += `<div class="smb3-grid-cell path-cell">▪</div>`;
+        }
+      }
+    }
+
+    const currentNode = world.nodes[this.currentNodeIdx];
 
     this.container.innerHTML = `
-      <div class="overworld-box retro-border">
+      <div class="overworld-box retro-border smb3-map-box">
         <div class="overworld-header">
-          <span class="brand-badge">SUPER MARIO BROS 3 MAP</span>
-          <h2>🗺️ WORLD 1: CAT FANTASY OVERWORLD</h2>
+          <span class="brand-badge">SUPER MARIO BROS 3 WORLD MAP</span>
+          <h2 style="font-size:18px; color:var(--neon-yellow);">${world.name}</h2>
         </div>
 
-        <!-- Overworld Map Node Track -->
-        <div class="map-track-container retro-border">
-          ${nodesHTML}
+        <!-- World Selection Tabs -->
+        <div class="world-tabs-bar">
+          ${tabsHTML}
+        </div>
+
+        <!-- Authentic SMB3 8x4 Grid Map Track -->
+        <div class="smb3-map-grid retro-border">
+          ${gridHTML}
         </div>
 
         <div class="overworld-details card">
-          <h3>SELECTED LEVEL: <span style="color:var(--neon-yellow);">${currentLvl.name}</span></h3>
+          <h3>SELECTED LEVEL: <span style="color:var(--neon-yellow);">${currentNode ? currentNode.name : 'Level 1'}</span></h3>
           <p style="font-size:16px; color:var(--text-muted); margin-top:4px;">
-            Navigate with <strong>A / D</strong> or <strong>Arrow Keys</strong>. Press <strong>SPACEBAR</strong> to start level!
+            Walk map with <strong>A / D</strong> or <strong>Arrow Keys</strong>. Press <strong>SPACEBAR</strong> to start level!
           </p>
-          <div class="modal-buttons" style="margin-top:12px;">
-            <button id="btn-start-map-level" class="retro-btn primary">START LEVEL ➔ [SPACEBAR]</button>
+          <div class="modal-buttons" style="margin-top:10px;">
+            <button id="btn-start-map-level" class="retro-btn primary">ENTER LEVEL ➔ [SPACEBAR]</button>
           </div>
         </div>
       </div>
     `;
 
-    document.querySelectorAll('.map-node.unlocked, .map-node.selected').forEach(node => {
-      node.onclick = () => {
-        const idx = parseInt(node.dataset.levelIdx, 10);
-        this.selectedNodeIndex = idx;
+    document.querySelectorAll('.world-tab').forEach(tab => {
+      tab.onclick = () => {
+        const wIdx = parseInt(tab.dataset.worldIdx, 10);
+        this.switchWorld(wIdx);
+      };
+    });
+
+    document.querySelectorAll('.node-cell.unlocked, .node-cell.selected').forEach(cell => {
+      cell.onclick = () => {
+        const nIdx = parseInt(cell.dataset.nodeIdx, 10);
+        this.currentNodeIdx = nIdx;
         this.render();
       };
     });

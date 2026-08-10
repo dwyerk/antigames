@@ -1,4 +1,4 @@
-// Tilemaps & Level Configurations for Super Mario Cat Co-Op Arcade
+// 4 Worlds x 10 Levels Each (40 Levels Total) for Super Mario Cat Co-Op Arcade
 export const TILE = {
   EMPTY: 0,
   GROUND: 1,      // Solid ground tile
@@ -11,209 +11,150 @@ export const TILE = {
   GOAL_POST: 8,   // Golden Collar level end post
 };
 
-export const CAT_LEVELS = [
+export const WORLDS = [
   {
     id: 1,
-    name: '1-1: Yarn Kingdom',
+    name: 'World 1: Yarn Kingdom',
     theme: 'yarn',
     bgColor: '#1b1428',
     skyColor: '#2d2244',
     groundColor: '#7a3e9d',
     platformColor: '#d65db1',
-    width: 250, // 250 tiles wide extended level!
-    height: 18,
-    spawnP1: { tileX: 3, tileY: 13 },
-    spawnP2: { tileX: 5, tileY: 13 },
-    goalX: 240,
-    mice: [
-      { tileX: 18, tileY: 12 },
-      { tileX: 45, tileY: 10 },
-      { tileX: 85, tileY: 10 },
-      { tileX: 135, tileY: 11 },
-      { tileX: 180, tileY: 10 },
-      { tileX: 215, tileY: 11 },
-    ],
-    dogs: [
-      { type: 'chihuahua', tileX: 25, tileY: 14, range: 6, speed: 1.8 },
-      { type: 'corgi', tileX: 55, tileY: 14, range: 7, speed: 1.4 },
-      { type: 'bulldog', tileX: 95, tileY: 14, range: 6, speed: 1.2 },
-      { type: 'chihuahua', tileX: 145, tileY: 14, range: 8, speed: 2.0 },
-      { type: 'bulldog', tileX: 190, tileY: 14, range: 7, speed: 1.5 },
-    ],
-    platforms: [
-      // Ground floor (y = 15)
-      { x: 0, y: 15, w: 250, h: 3, type: TILE.GROUND },
-
-      // Section 1: Low reachable stepping platforms & '?' blocks
-      { x: 12, y: 12, w: 3, h: 1, type: TILE.GROUND },
-      { x: 15, y: 11, w: 1, h: 1, type: TILE.BLOCK_ITEM },
-      { x: 16, y: 11, w: 3, h: 1, type: TILE.BRICK },
-      { x: 26, y: 12, w: 4, h: 1, type: TILE.YARN_BALL },
-
-      // Section 2: Low-gap steps
-      { x: 38, y: 12, w: 4, h: 1, type: TILE.GROUND },
-      { x: 44, y: 10, w: 1, h: 1, type: TILE.BLOCK_ITEM },
-      { x: 45, y: 10, w: 3, h: 1, type: TILE.BRICK },
-      { x: 48, y: 10, w: 1, h: 1, type: TILE.BLOCK_ITEM },
-
-      // Section 3: Bouncy Yarn & Mid Platforms
-      { x: 60, y: 12, w: 5, h: 1, type: TILE.YARN_BALL },
-      { x: 72, y: 11, w: 6, h: 1, type: TILE.GROUND },
-      { x: 80, y: 11, w: 1, h: 1, type: TILE.BLOCK_ITEM },
-      { x: 81, y: 11, w: 4, h: 1, type: TILE.BRICK },
-
-      // Section 4: Extended Middle Run
-      { x: 105, y: 12, w: 5, h: 1, type: TILE.GROUND },
-      { x: 118, y: 11, w: 4, h: 1, type: TILE.YARN_BALL },
-      { x: 130, y: 11, w: 1, h: 1, type: TILE.BLOCK_ITEM },
-      { x: 131, y: 11, w: 4, h: 1, type: TILE.BRICK },
-      { x: 148, y: 12, w: 6, h: 1, type: TILE.GROUND },
-
-      // Section 5: Finale Stretch
-      { x: 170, y: 11, w: 5, h: 1, type: TILE.YARN_BALL },
-      { x: 185, y: 11, w: 1, h: 1, type: TILE.BLOCK_ITEM },
-      { x: 186, y: 11, w: 5, h: 1, type: TILE.BRICK },
-      { x: 205, y: 12, w: 6, h: 1, type: TILE.GROUND },
-      { x: 220, y: 12, w: 5, h: 1, type: TILE.YARN_BALL },
+    accentColor: '#ff00aa',
+    nodes: [
+      { id: '1-1', type: 'level', levelNum: 1, gridX: 1, gridY: 2, name: 'Level 1-1' },
+      { id: '1-2', type: 'level', levelNum: 2, gridX: 2, gridY: 2, name: 'Level 1-2' },
+      { id: '1-3', type: 'level', levelNum: 3, gridX: 3, gridY: 2, name: 'Level 1-3' },
+      { id: 'bonus-1', type: 'bonus', levelNum: 0, gridX: 3, gridY: 1, name: 'Catnip House' },
+      { id: '1-4', type: 'level', levelNum: 4, gridX: 4, gridY: 2, name: 'Level 1-4' },
+      { id: '1-5', type: 'level', levelNum: 5, gridX: 5, gridY: 2, name: 'Level 1-5' },
+      { id: '1-6', type: 'level', levelNum: 6, gridX: 5, gridY: 3, name: 'Level 1-6' },
+      { id: '1-7', type: 'level', levelNum: 7, gridX: 6, gridY: 3, name: 'Level 1-7' },
+      { id: '1-8', type: 'level', levelNum: 8, gridX: 7, gridY: 3, name: 'Level 1-8' },
+      { id: '1-9', type: 'level', levelNum: 9, gridX: 7, gridY: 2, name: 'Level 1-9' },
+      { id: '1-10', type: 'fortress', levelNum: 10, gridX: 8, gridY: 2, name: 'Level 1-10 Fortress' },
     ]
   },
-
   {
     id: 2,
-    name: '1-2: Catnip Forest',
+    name: 'World 2: Catnip Forest',
     theme: 'catnip',
     bgColor: '#0f241a',
     skyColor: '#1a3a2a',
     groundColor: '#2b6343',
     platformColor: '#4ee48d',
-    width: 250,
-    height: 18,
-    spawnP1: { tileX: 3, tileY: 13 },
-    spawnP2: { tileX: 5, tileY: 13 },
-    goalX: 240,
-    mice: [
-      { tileX: 20, tileY: 11 },
-      { tileX: 50, tileY: 10 },
-      { tileX: 95, tileY: 11 },
-      { tileX: 140, tileY: 10 },
-      { tileX: 195, tileY: 11 },
-    ],
-    dogs: [
-      { type: 'corgi', tileX: 30, tileY: 14, range: 7, speed: 1.5 },
-      { type: 'chihuahua', tileX: 70, tileY: 14, range: 6, speed: 2.2 },
-      { type: 'bulldog', tileX: 110, tileY: 14, range: 8, speed: 1.3 },
-      { type: 'corgi', tileX: 160, tileY: 14, range: 7, speed: 1.6 },
-      { type: 'bulldog', tileX: 210, tileY: 14, range: 8, speed: 1.4 },
-    ],
-    platforms: [
-      { x: 0, y: 15, w: 250, h: 3, type: TILE.GROUND },
-      // Low mushroom steps
-      { x: 15, y: 12, w: 5, h: 1, type: TILE.GROUND },
-      { x: 24, y: 11, w: 1, h: 1, type: TILE.BLOCK_ITEM },
-      { x: 35, y: 11, w: 6, h: 1, type: TILE.GROUND },
-      { x: 48, y: 10, w: 1, h: 1, type: TILE.BLOCK_ITEM },
-      { x: 49, y: 10, w: 4, h: 1, type: TILE.BRICK },
-      { x: 65, y: 12, w: 6, h: 1, type: TILE.GROUND },
-      { x: 80, y: 11, w: 5, h: 1, type: TILE.GROUND },
-      { x: 92, y: 11, w: 1, h: 1, type: TILE.BLOCK_ITEM },
-      { x: 115, y: 12, w: 6, h: 1, type: TILE.GROUND },
-      { x: 135, y: 11, w: 1, h: 1, type: TILE.BLOCK_ITEM },
-      { x: 136, y: 11, w: 5, h: 1, type: TILE.BRICK },
-      { x: 158, y: 12, w: 6, h: 1, type: TILE.GROUND },
-      { x: 180, y: 11, w: 5, h: 1, type: TILE.GROUND },
-      { x: 194, y: 11, w: 1, h: 1, type: TILE.BLOCK_ITEM },
-      { x: 215, y: 12, w: 6, h: 1, type: TILE.GROUND },
+    accentColor: '#00ff66',
+    nodes: [
+      { id: '2-1', type: 'level', levelNum: 1, gridX: 1, gridY: 2, name: 'Level 2-1' },
+      { id: '2-2', type: 'level', levelNum: 2, gridX: 2, gridY: 2, name: 'Level 2-2' },
+      { id: '2-3', type: 'level', levelNum: 3, gridX: 3, gridY: 2, name: 'Level 2-3' },
+      { id: '2-4', type: 'level', levelNum: 4, gridX: 4, gridY: 2, name: 'Level 2-4' },
+      { id: '2-5', type: 'level', levelNum: 5, gridX: 4, gridY: 3, name: 'Level 2-5' },
+      { id: '2-6', type: 'level', levelNum: 6, gridX: 5, gridY: 3, name: 'Level 2-6' },
+      { id: '2-7', type: 'level', levelNum: 7, gridX: 6, gridY: 3, name: 'Level 2-7' },
+      { id: '2-8', type: 'level', levelNum: 8, gridX: 6, gridY: 2, name: 'Level 2-8' },
+      { id: '2-9', type: 'level', levelNum: 9, gridX: 7, gridY: 2, name: 'Level 2-9' },
+      { id: '2-10', type: 'fortress', levelNum: 10, gridX: 8, gridY: 2, name: 'Level 2-10 Fortress' },
     ]
   },
-
   {
     id: 3,
-    name: '1-3: Fish Pond Alley',
+    name: 'World 3: Fish Pond Alley',
     theme: 'fish',
     bgColor: '#0a1d36',
     skyColor: '#12325c',
     groundColor: '#1c528e',
     platformColor: '#00d2ff',
-    width: 250,
-    height: 18,
-    spawnP1: { tileX: 3, tileY: 13 },
-    spawnP2: { tileX: 5, tileY: 13 },
-    goalX: 240,
-    mice: [
-      { tileX: 25, tileY: 10 },
-      { tileX: 65, tileY: 10 },
-      { tileX: 110, tileY: 11 },
-      { tileX: 160, tileY: 10 },
-      { tileX: 205, tileY: 11 },
-    ],
-    dogs: [
-      { type: 'bulldog', tileX: 35, tileY: 14, range: 6, speed: 1.3 },
-      { type: 'chihuahua', tileX: 80, tileY: 14, range: 8, speed: 2.3 },
-      { type: 'bulldog', tileX: 130, tileY: 14, range: 7, speed: 1.4 },
-      { type: 'corgi', tileX: 175, tileY: 14, range: 7, speed: 1.6 },
-      { type: 'bulldog', tileX: 215, tileY: 14, range: 8, speed: 1.5 },
-    ],
-    platforms: [
-      { x: 0, y: 15, w: 250, h: 3, type: TILE.GROUND },
-      { x: 18, y: 12, w: 5, h: 1, type: TILE.LILY_PAD },
-      { x: 28, y: 11, w: 1, h: 1, type: TILE.BLOCK_ITEM },
-      { x: 40, y: 11, w: 6, h: 1, type: TILE.GROUND },
-      { x: 55, y: 12, w: 5, h: 1, type: TILE.LILY_PAD },
-      { x: 64, y: 10, w: 1, h: 1, type: TILE.BLOCK_ITEM },
-      { x: 75, y: 11, w: 6, h: 1, type: TILE.GROUND },
-      { x: 95, y: 12, w: 5, h: 1, type: TILE.LILY_PAD },
-      { x: 108, y: 11, w: 1, h: 1, type: TILE.BLOCK_ITEM },
-      { x: 125, y: 11, w: 6, h: 1, type: TILE.GROUND },
-      { x: 145, y: 12, w: 5, h: 1, type: TILE.LILY_PAD },
-      { x: 158, y: 10, w: 1, h: 1, type: TILE.BLOCK_ITEM },
-      { x: 175, y: 11, w: 6, h: 1, type: TILE.GROUND },
-      { x: 198, y: 12, w: 5, h: 1, type: TILE.LILY_PAD },
-      { x: 218, y: 12, w: 6, h: 1, type: TILE.GROUND },
+    accentColor: '#00bfff',
+    nodes: [
+      { id: '3-1', type: 'level', levelNum: 1, gridX: 1, gridY: 2, name: 'Level 3-1' },
+      { id: '3-2', type: 'level', levelNum: 2, gridX: 2, gridY: 2, name: 'Level 3-2' },
+      { id: '3-3', type: 'level', levelNum: 3, gridX: 3, gridY: 2, name: 'Level 3-3' },
+      { id: '3-4', type: 'level', levelNum: 4, gridX: 4, gridY: 2, name: 'Level 3-4' },
+      { id: '3-5', type: 'level', levelNum: 5, gridX: 5, gridY: 2, name: 'Level 3-5' },
+      { id: '3-6', type: 'level', levelNum: 6, gridX: 5, gridY: 1, name: 'Level 3-6' },
+      { id: '3-7', type: 'level', levelNum: 7, gridX: 6, gridY: 1, name: 'Level 3-7' },
+      { id: '3-8', type: 'level', levelNum: 8, gridX: 6, gridY: 2, name: 'Level 3-8' },
+      { id: '3-9', type: 'level', levelNum: 9, gridX: 7, gridY: 2, name: 'Level 3-9' },
+      { id: '3-10', type: 'fortress', levelNum: 10, gridX: 8, gridY: 2, name: 'Level 3-10 Fortress' },
     ]
   },
-
   {
     id: 4,
-    name: '1-4: Dog Citadel',
+    name: 'World 4: Dog Citadel',
     theme: 'citadel',
     bgColor: '#2a0e14',
     skyColor: '#4a1824',
     groundColor: '#7a2234',
     platformColor: '#ff4466',
+    accentColor: '#ff0033',
+    nodes: [
+      { id: '4-1', type: 'level', levelNum: 1, gridX: 1, gridY: 2, name: 'Level 4-1' },
+      { id: '4-2', type: 'level', levelNum: 2, gridX: 2, gridY: 2, name: 'Level 4-2' },
+      { id: '4-3', type: 'level', levelNum: 3, gridX: 3, gridY: 2, name: 'Level 4-3' },
+      { id: '4-4', type: 'level', levelNum: 4, gridX: 4, gridY: 2, name: 'Level 4-4' },
+      { id: '4-5', type: 'level', levelNum: 5, gridX: 4, gridY: 3, name: 'Level 4-5' },
+      { id: '4-6', type: 'level', levelNum: 6, gridX: 5, gridY: 3, name: 'Level 4-6' },
+      { id: '4-7', type: 'level', levelNum: 7, gridX: 6, gridY: 3, name: 'Level 4-7' },
+      { id: '4-8', type: 'level', levelNum: 8, gridX: 6, gridY: 2, name: 'Level 4-8' },
+      { id: '4-9', type: 'level', levelNum: 9, gridX: 7, gridY: 2, name: 'Level 4-9' },
+      { id: '4-10', type: 'fortress', levelNum: 10, gridX: 8, gridY: 2, name: 'Level 4-10 Citadel Castle' },
+    ]
+  }
+];
+
+// Generate Level Data for World W, Level L (250 tiles wide)
+export function getLevelData(worldIndex = 0, levelIndex = 0) {
+  const world = WORLDS[worldIndex % WORLDS.length];
+  const levelNum = (levelIndex % 10) + 1;
+
+  const platforms = [
+    // Ground floor
+    { x: 0, y: 15, w: 250, h: 3, type: TILE.GROUND },
+  ];
+
+  const mice = [];
+  const dogs = [];
+
+  // Generate 250-tile long level sections procedurally based on levelNum & theme
+  for (let sec = 0; sec < 12; sec++) {
+    const startX = 15 + sec * 20;
+
+    // Platform pattern
+    if (sec % 2 === 0) {
+      platforms.push({ x: startX, y: 12, w: 5, h: 1, type: world.theme === 'yarn' ? TILE.YARN_BALL : world.theme === 'fish' ? TILE.LILY_PAD : TILE.GROUND });
+      platforms.push({ x: startX + 6, y: 10, w: 1, h: 1, type: TILE.BLOCK_ITEM });
+      platforms.push({ x: startX + 7, y: 10, w: 3, h: 1, type: TILE.BRICK });
+    } else {
+      platforms.push({ x: startX, y: 11, w: 6, h: 1, type: TILE.GROUND });
+      platforms.push({ x: startX + 8, y: 10, w: 1, h: 1, type: TILE.BLOCK_ITEM });
+    }
+
+    // Spawn Mice
+    mice.push({ tileX: startX + 2, tileY: 10 });
+
+    // Spawn Dog Enemies
+    const dogType = sec % 3 === 0 ? 'bulldog' : sec % 3 === 1 ? 'corgi' : 'chihuahua';
+    const speed = 1.2 + (levelNum * 0.1) + (sec % 2) * 0.5;
+    dogs.push({ type: dogType, tileX: startX + 5, tileY: 14, range: 6, speed });
+  }
+
+  return {
+    worldIndex,
+    levelIndex,
+    name: `${world.name} - Level ${worldIndex + 1}-${levelNum}`,
+    theme: world.theme,
+    bgColor: world.bgColor,
+    skyColor: world.skyColor,
+    groundColor: world.groundColor,
+    platformColor: world.platformColor,
     width: 250,
     height: 18,
     spawnP1: { tileX: 3, tileY: 13 },
     spawnP2: { tileX: 5, tileY: 13 },
     goalX: 240,
-    mice: [
-      { tileX: 30, tileY: 10 },
-      { tileX: 75, tileY: 10 },
-      { tileX: 120, tileY: 11 },
-      { tileX: 170, tileY: 10 },
-      { tileX: 210, tileY: 11 },
-    ],
-    dogs: [
-      { type: 'chihuahua', tileX: 25, tileY: 14, range: 7, speed: 2.5 },
-      { type: 'bulldog', tileX: 55, tileY: 14, range: 8, speed: 1.6 },
-      { type: 'corgi', tileX: 95, tileY: 14, range: 7, speed: 1.8 },
-      { type: 'bulldog', tileX: 140, tileY: 14, range: 8, speed: 1.7 },
-      { type: 'bulldog', tileX: 190, tileY: 14, range: 9, speed: 1.8 },
-    ],
-    platforms: [
-      { x: 0, y: 15, w: 250, h: 3, type: TILE.GROUND },
-      { x: 20, y: 12, w: 6, h: 1, type: TILE.BRICK },
-      { x: 28, y: 10, w: 1, h: 1, type: TILE.BLOCK_ITEM },
-      { x: 42, y: 11, w: 7, h: 1, type: TILE.GROUND },
-      { x: 60, y: 12, w: 5, h: 1, type: TILE.BRICK },
-      { x: 72, y: 10, w: 1, h: 1, type: TILE.BLOCK_ITEM },
-      { x: 88, y: 11, w: 7, h: 1, type: TILE.GROUND },
-      { x: 108, y: 12, w: 6, h: 1, type: TILE.BRICK },
-      { x: 118, y: 11, w: 1, h: 1, type: TILE.BLOCK_ITEM },
-      { x: 135, y: 11, w: 7, h: 1, type: TILE.GROUND },
-      { x: 155, y: 12, w: 6, h: 1, type: TILE.BRICK },
-      { x: 168, y: 10, w: 1, h: 1, type: TILE.BLOCK_ITEM },
-      { x: 188, y: 11, w: 7, h: 1, type: TILE.GROUND },
-      { x: 208, y: 12, w: 6, h: 1, type: TILE.GROUND },
-    ]
-  }
-];
+    mice,
+    dogs,
+    platforms,
+  };
+}
