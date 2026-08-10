@@ -85,8 +85,20 @@ class AntigamesApp {
     const paletteCard = document.getElementById('palette-card');
     const marioCard = document.getElementById('mario-cat-card');
 
+    const sandHud = document.getElementById('hud-sand-stats');
+    const marioHud = document.getElementById('hud-mario-stats');
+    const sandControls = document.getElementById('sim-sand-controls');
+    const marioControls = document.getElementById('sim-mario-controls');
+    const galleryBtn = document.getElementById('btn-gallery');
+
     if (gameId === 'mario-cat') {
       badge.textContent = 'SUPER MARIO CAT CO-OP';
+      if (sandHud) sandHud.classList.add('hidden');
+      if (marioHud) marioHud.classList.remove('hidden');
+      if (sandControls) sandControls.classList.add('hidden');
+      if (marioControls) marioControls.classList.remove('hidden');
+      if (galleryBtn) galleryBtn.classList.add('hidden');
+
       bpCard.classList.add('hidden');
       accCard.classList.add('hidden');
       streamCard.classList.add('hidden');
@@ -103,6 +115,12 @@ class AntigamesApp {
       }
       this.overworldController.show();
     } else {
+      if (sandHud) sandHud.classList.remove('hidden');
+      if (marioHud) marioHud.classList.add('hidden');
+      if (sandControls) sandControls.classList.remove('hidden');
+      if (marioControls) marioControls.classList.add('hidden');
+      if (galleryBtn) galleryBtn.classList.remove('hidden');
+
       if (marioCard) marioCard.classList.add('hidden');
       streamCard.classList.remove('hidden');
       paletteCard.classList.remove('hidden');
@@ -152,6 +170,20 @@ class AntigamesApp {
     const pauseBtn = document.getElementById('btn-pause');
     const speedBtn = document.getElementById('btn-speed');
     const resetBtn = document.getElementById('btn-reset');
+    const openMapBtn = document.getElementById('btn-open-map');
+    const restartCatBtn = document.getElementById('btn-restart-cat-level');
+
+    if (openMapBtn) {
+      openMapBtn.onclick = () => this.overworldController.show();
+    }
+
+    if (restartCatBtn) {
+      restartCatBtn.onclick = () => {
+        if (this.catEngine) {
+          this.catEngine.loadLevel(this.catEngine.worldIndex, this.catEngine.levelIndex, this.catEngine.playerCount);
+        }
+      };
+    }
 
     flowBtn.onclick = () => {
       this.streamEnabled = !this.streamEnabled;
@@ -379,32 +411,53 @@ class AntigamesApp {
   }
 
   updateHUD() {
-    document.getElementById('stat-stage').textContent = this.stageNumber;
-    document.getElementById('stat-score').textContent = this.score;
-    document.getElementById('stat-bottles').textContent = `🏆 ${this.bottlesSealed}`;
+    if (this.activeGameMode === 'mario-cat' && this.catEngine) {
+      const p1 = this.catEngine.players[0];
+      const miceCaught = this.catEngine.mice.filter(m => m.eaten).length;
+      const dogsDefeated = this.catEngine.dogs.filter(d => d.defeated).length;
 
-    document.getElementById('vessel-fill-pct').textContent = `${this.currentFillPct}% / ${this.targetFillPct}%`;
+      const wIdx = this.catEngine.worldIndex + 1;
+      const lIdx = this.catEngine.levelIndex + 1;
 
-    const gradeLetter = this.accuracyPct >= 90 ? 'S' : this.accuracyPct >= 75 ? 'A' : this.accuracyPct >= 50 ? 'B' : 'C';
-    document.getElementById('accuracy-score-text').textContent = `${this.accuracyPct}% (Grade ${gradeLetter})`;
-    document.getElementById('accuracy-progress-bar').style.width = `${this.accuracyPct}%`;
+      const lvlElem = document.getElementById('mario-stat-level');
+      const scoreElem = document.getElementById('mario-stat-score');
+      const miceElem = document.getElementById('mario-stat-mice');
+      const dogsElem = document.getElementById('mario-stat-dogs');
+      const modeElem = document.getElementById('mario-mode-indicator');
 
-    const vesselNames = {
-      [VESSEL_TYPES.JAR]: 'Square Glass Jar',
-      [VESSEL_TYPES.CYLINDER]: 'Tall Cylinder Flask',
-      [VESSEL_TYPES.FUNNEL]: 'Tapered Funnel Vessel',
-      [VESSEL_TYPES.BOWL]: 'Wide Sand Bowl',
-      [VESSEL_TYPES.FLASK]: 'Erlenmeyer Beaker',
-      [VESSEL_TYPES.HOURGLASS]: 'Hourglass Chamber'
-    };
+      if (lvlElem) lvlElem.textContent = `${wIdx}-${lIdx}`;
+      if (scoreElem) scoreElem.textContent = (p1 ? p1.score : 0).toString().padStart(5, '0');
+      if (miceElem) miceElem.textContent = `🧀 x ${miceCaught}`;
+      if (dogsElem) dogsElem.textContent = `🐶 x ${dogsDefeated}`;
+      if (modeElem) modeElem.textContent = this.catEngine.playerCount === 1 ? '🐱 1P Solo' : '🐱🐱 2P Co-Op';
 
-    if (this.activeGameMode === 'mario-cat') {
       const lvlName = this.catEngine?.level?.name || 'Cat World';
-      document.getElementById('vessel-hint').textContent = `Super Mario Cat - Stage ${this.catEngine ? this.catEngine.levelIndex + 1 : 1}: ${lvlName}! (Reach the Golden Collar Goal Post)`;
-    } else if (this.activeGameMode === 'sandbox') {
-      document.getElementById('vessel-hint').textContent = `Sandbox Mode: Create freeform sand art inside the ${vesselNames[this.vesselType] || 'Vessel'}!`;
+      document.getElementById('vessel-hint').textContent = `Super Mario Cat - Stage ${wIdx}-${lIdx}: ${lvlName}! (Reach the Golden Collar Goal Post)`;
     } else {
-      document.getElementById('vessel-hint').textContent = `Stage ${this.stageNumber}: Emulate the target blueprint layers in the ${vesselNames[this.vesselType] || 'Vessel'}!`;
+      document.getElementById('stat-stage').textContent = this.stageNumber;
+      document.getElementById('stat-score').textContent = this.score;
+      document.getElementById('stat-bottles').textContent = `🏆 ${this.bottlesSealed}`;
+
+      document.getElementById('vessel-fill-pct').textContent = `${this.currentFillPct}% / ${this.targetFillPct}%`;
+
+      const gradeLetter = this.accuracyPct >= 90 ? 'S' : this.accuracyPct >= 75 ? 'A' : this.accuracyPct >= 50 ? 'B' : 'C';
+      document.getElementById('accuracy-score-text').textContent = `${this.accuracyPct}% (Grade ${gradeLetter})`;
+      document.getElementById('accuracy-progress-bar').style.width = `${this.accuracyPct}%`;
+
+      const vesselNames = {
+        [VESSEL_TYPES.JAR]: 'Square Glass Jar',
+        [VESSEL_TYPES.CYLINDER]: 'Tall Cylinder Flask',
+        [VESSEL_TYPES.FUNNEL]: 'Tapered Funnel Vessel',
+        [VESSEL_TYPES.BOWL]: 'Wide Sand Bowl',
+        [VESSEL_TYPES.FLASK]: 'Erlenmeyer Beaker',
+        [VESSEL_TYPES.HOURGLASS]: 'Hourglass Chamber'
+      };
+
+      if (this.activeGameMode === 'sandbox') {
+        document.getElementById('vessel-hint').textContent = `Sandbox Mode: Create freeform sand art inside the ${vesselNames[this.vesselType] || 'Vessel'}!`;
+      } else {
+        document.getElementById('vessel-hint').textContent = `Stage ${this.stageNumber}: Emulate the target blueprint layers in the ${vesselNames[this.vesselType] || 'Vessel'}!`;
+      }
     }
   }
 

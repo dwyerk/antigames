@@ -79,8 +79,8 @@
             <span id="game-mode-badge" class="brand-badge">SUPER MARIO CAT CO-OP</span>
           </div>
 
-          <!-- Arcade Stats -->
-          <div class="arcade-stats-bar">
+          <!-- Game-Specific Arcade Scoreboard HUD Bars -->
+          <div id="hud-sand-stats" class="arcade-stats-bar">
             <div class="stat-pill">
               <span class="pill-label">STAGE</span>
               <span id="stat-stage" class="pill-value">1</span>
@@ -92,6 +92,25 @@
             <div class="stat-pill">
               <span class="pill-label">SEALED BOTTLES</span>
               <span id="stat-bottles" class="pill-value">🏆 0</span>
+            </div>
+          </div>
+
+          <div id="hud-mario-stats" class="arcade-stats-bar hidden">
+            <div class="stat-pill">
+              <span class="pill-label">WORLD LEVEL</span>
+              <span id="mario-stat-level" class="pill-value" style="color:var(--neon-yellow);">1-1</span>
+            </div>
+            <div class="stat-pill">
+              <span class="pill-label">SCORE</span>
+              <span id="mario-stat-score" class="pill-value">00000</span>
+            </div>
+            <div class="stat-pill">
+              <span class="pill-label">MICE CAUGHT</span>
+              <span id="mario-stat-mice" class="pill-value">🧀 x 0</span>
+            </div>
+            <div class="stat-pill">
+              <span class="pill-label">DOGS DEFEATED</span>
+              <span id="mario-stat-dogs" class="pill-value">🐶 x 0</span>
             </div>
           </div>
 
@@ -112,13 +131,19 @@
               <div id="crt-overlay" class="crt-lines"></div>
             </div>
 
-            <!-- Bottom Control Bar (Flow Toggle, Play, Pause, Fast-Forward, Clear) -->
-            <div class="sim-controls retro-border">
+            <!-- Game-Specific Bottom Control Bars -->
+            <div id="sim-sand-controls" class="sim-controls retro-border">
               <button id="btn-toggle-stream" class="control-btn active" title="Toggle Sand Stream Flow">🌊 Flow: ON</button>
               <button id="btn-play" class="control-btn active" title="Play Simulation">▶ Play</button>
               <button id="btn-pause" class="control-btn" title="Pause Simulation">⏸ Pause</button>
               <button id="btn-speed" class="control-btn" title="Toggle 2x Speed">⏩ 1x</button>
               <button id="btn-reset" class="control-btn danger" title="Clear Container">🔄 Clear Vessel</button>
+            </div>
+
+            <div id="sim-mario-controls" class="sim-controls retro-border hidden">
+              <button id="btn-open-map" class="control-btn active" title="Return to SMB3 Overworld Map">🗺️ Overworld Map</button>
+              <button id="btn-restart-cat-level" class="control-btn danger" title="Restart Current Level">🔄 Restart Level</button>
+              <span id="mario-mode-indicator" class="brand-badge" style="margin-left:auto;">🐱 1P Solo</span>
             </div>
           </section>
 
