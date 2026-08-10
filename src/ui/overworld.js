@@ -13,6 +13,9 @@ export class OverworldMapController {
     // Highest unlocked level per world: { 0: 0, 1: 0, 2: 0, 3: 0 }
     this.unlockedLevels = { 0: 0, 1: 0, 2: 0, 3: 0 };
 
+    // Persistent Active Powerup inventory: 'MOUSE_BIG' | 'LASER_BELL' | 'CATNIP_SHIELD' | 'SUPER_WHISKERS'
+    this.activePowerup = null;
+
     this.isVisible = false;
   }
 
@@ -76,11 +79,69 @@ export class OverworldMapController {
   launchSelectedLevel() {
     const world = WORLDS[this.currentWorldIdx];
     const node = world.nodes[this.currentNodeIdx];
+
+    if (node.type === 'bonus') {
+      this.showCatnipHouseModal();
+      return;
+    }
+
     this.hide();
 
     if (this.onSelectLevel) {
-      this.onSelectLevel(this.currentWorldIdx, node.levelNum - 1, this.playerCount);
+      this.onSelectLevel(this.currentWorldIdx, node.levelNum - 1, this.playerCount, this.activePowerup);
     }
+  }
+
+  showCatnipHouseModal() {
+    const powerups = [
+      { id: 'MOUSE_BIG', name: '🧀 Giant Cheese Mouse', desc: 'Grow into Big Cat standing on two legs!' },
+      { id: 'LASER_BELL', name: '🔔 Super Laser Bell', desc: 'Emits a laser pulse that scares away dogs!' },
+      { id: 'CATNIP_SHIELD', name: '🌿 Golden Catnip Shield', desc: 'Invulnerability shield protecting against dog bites!' },
+      { id: 'SUPER_WHISKERS', name: '🐾 Super Whiskers', desc: 'High double-jump spring boost!' },
+    ];
+
+    const randomP = powerups[Math.floor(Math.random() * powerups.length)];
+
+    const modalHTML = `
+      <div class="modal-box retro-border" style="max-width:520px; text-align:center;">
+        <h2 style="color:var(--neon-yellow); font-size:18px;">🌿 CATNIP HOUSE BONUS GIFT</h2>
+        <p style="font-size:15px; color:var(--text-muted); margin-top:6px;">
+          Pick a mystery box to reveal a cat powerup!
+        </p>
+
+        <div style="display:flex; justify-content:center; gap:16px; margin:20px 0;">
+          <button class="retro-btn gift-box-btn" data-box="1">🎁 BOX 1</button>
+          <button class="retro-btn gift-box-btn" data-box="2">🎁 BOX 2</button>
+          <button class="retro-btn gift-box-btn" data-box="3">🎁 BOX 3</button>
+        </div>
+
+        <div id="gift-result-box" class="hidden card" style="background:#1c2444; border:1px solid var(--neon-cyan); padding:12px;">
+          <h3 id="gift-title" style="color:var(--neon-green); font-size:16px;">${randomP.name}</h3>
+          <p id="gift-desc" style="font-size:14px; color:#fff; margin-top:4px;">${randomP.desc}</p>
+        </div>
+
+        <div style="margin-top:16px;">
+          <button id="btn-close-catnip-house" class="retro-btn primary">CONTINUE ON MAP ➔</button>
+        </div>
+      </div>
+    `;
+
+    const overlay = document.getElementById('modal-overlay');
+    overlay.innerHTML = modalHTML;
+    overlay.classList.remove('hidden');
+
+    document.querySelectorAll('.gift-box-btn').forEach(btn => {
+      btn.onclick = () => {
+        this.activePowerup = randomP.id;
+        document.getElementById('gift-result-box').classList.remove('hidden');
+        document.querySelectorAll('.gift-box-btn').forEach(b => b.disabled = true);
+      };
+    });
+
+    document.getElementById('btn-close-catnip-house').onclick = () => {
+      overlay.classList.add('hidden');
+      this.render();
+    };
   }
 
   show() {
@@ -143,6 +204,13 @@ export class OverworldMapController {
 
     const currentNode = world.nodes[this.currentNodeIdx];
 
+    const powerupNames = {
+      'MOUSE_BIG': '🧀 Giant Cheese Mouse (Big Cat)',
+      'LASER_BELL': '🔔 Super Laser Bell',
+      'CATNIP_SHIELD': '🌿 Golden Catnip Shield',
+      'SUPER_WHISKERS': '🐾 Super Whiskers',
+    };
+
     this.container.innerHTML = `
       <div class="overworld-box retro-border smb3-map-box">
         <div class="overworld-header">
@@ -167,7 +235,10 @@ export class OverworldMapController {
         </div>
 
         <div class="overworld-details card">
-          <h3>SELECTED LEVEL: <span style="color:var(--neon-yellow);">${currentNode ? currentNode.name : 'Level 1'}</span></h3>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3>SELECTED: <span style="color:var(--neon-yellow);">${currentNode ? currentNode.name : 'Level 1'}</span></h3>
+            <span style="font-size:13px; color:var(--neon-cyan);">EQUIPPED: ${this.activePowerup ? powerupNames[this.activePowerup] : 'None'}</span>
+          </div>
           <p style="font-size:15px; color:var(--text-muted); margin-top:4px;">
             Mode: <strong>${this.playerCount === 1 ? '1-Player Solo Cat (WASD / Arrows)' : '2-Player Local Co-Op (P1: WASD | P2: Arrows)'}</strong>
           </p>

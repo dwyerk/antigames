@@ -47,7 +47,7 @@ export class CatGameEngine {
     });
   }
 
-  loadLevel(worldIdx = 0, levelIdx = 0, playerCount = null) {
+  loadLevel(worldIdx = 0, levelIdx = 0, playerCount = null, equippedPowerup = null) {
     if (playerCount !== null) this.playerCount = playerCount;
 
     this.worldIndex = worldIdx;
@@ -59,19 +59,21 @@ export class CatGameEngine {
     const p2SpawnX = this.level.spawnP2.tileX * TILE_SIZE;
     const p2SpawnY = this.level.spawnP2.tileY * TILE_SIZE;
 
+    const startAsBig = equippedPowerup === 'MOUSE_BIG';
+
     this.players = [
       {
         id: 1,
         name: 'Orange Tabby',
         x: p1SpawnX,
-        y: p1SpawnY,
+        y: startAsBig ? p1SpawnY - 30 : p1SpawnY,
         vx: 0,
         vy: 0,
-        w: 52, // 2 blocks wide (all fours)
-        h: 26, // 1 block tall
-        isBig: false,
+        w: startAsBig ? 30 : 52,
+        h: startAsBig ? 56 : 26,
+        isBig: startAsBig,
         isGrounded: false,
-        invulnerableTimer: 0,
+        invulnerableTimer: equippedPowerup === 'CATNIP_SHIELD' ? 600 : 0,
         color: '#ff9900',
         earColor: '#cc6600',
         score: 0,
@@ -84,14 +86,14 @@ export class CatGameEngine {
         id: 2,
         name: 'Shadow Cat',
         x: p2SpawnX,
-        y: p2SpawnY,
+        y: startAsBig ? p2SpawnY - 30 : p2SpawnY,
         vx: 0,
         vy: 0,
-        w: 52, // 2 blocks wide (all fours)
-        h: 26, // 1 block tall
-        isBig: false,
+        w: startAsBig ? 30 : 52,
+        h: startAsBig ? 56 : 26,
+        isBig: startAsBig,
         isGrounded: false,
-        invulnerableTimer: 0,
+        invulnerableTimer: equippedPowerup === 'CATNIP_SHIELD' ? 600 : 0,
         color: '#333b48',
         earColor: '#1a202c',
         score: 0,
@@ -123,7 +125,7 @@ export class CatGameEngine {
     // Reset Laser Dot & State
     this.laserDot = null;
     this.laserTimer = 0;
-    this.laserActive = false;
+    this.laserActive = equippedPowerup === 'LASER_BELL';
     this.isStageComplete = false;
     this.isGameOver = false;
   }
@@ -550,8 +552,8 @@ export class CatGameEngine {
         this.ctx.fillRect(cx + 4, cy + p.h - 10, 8, 10);
         this.ctx.fillRect(cx + 18, cy + p.h - 10, 8, 10);
 
-        // Overalls / Chest plate
-        this.ctx.fillStyle = '#ff0044';
+        // Fluffy White Cat Bib Fur
+        this.ctx.fillStyle = '#ffffff';
         this.ctx.fillRect(cx + 6, cy + 24, 18, 14);
 
         // Head on top

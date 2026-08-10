@@ -50,7 +50,7 @@ class AntigamesApp {
 
     this.overworldController = new OverworldMapController(
       document.getElementById('overworld-map-overlay'),
-      (worldIdx, levelIdx, playerCount) => {
+      (worldIdx, levelIdx, playerCount, equippedPowerup) => {
         if (!this.catEngine) {
           this.catEngine = new CatGameEngine(this.canvas, this.ctx, {
             onLevelComplete: (completedWorld, nextLvl) => {
@@ -59,7 +59,7 @@ class AntigamesApp {
             }
           });
         }
-        this.catEngine.loadLevel(worldIdx, levelIdx, playerCount);
+        this.catEngine.loadLevel(worldIdx, levelIdx, playerCount, equippedPowerup);
       }
     );
 
