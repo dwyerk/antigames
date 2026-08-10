@@ -8,6 +8,7 @@ import { Storage } from './storage.js';
 import { SFX } from './audio/sfx.js';
 import { UIController } from './ui/components.js';
 import { MainMenuController } from './ui/menu.js';
+import { OverworldMapController } from './ui/overworld.js';
 
 class AntigamesApp {
   constructor() {
@@ -47,6 +48,21 @@ class AntigamesApp {
       restartArcade: () => this.startArcade(),
     });
 
+    this.overworldController = new OverworldMapController(
+      document.getElementById('overworld-map-overlay'),
+      (levelIdx) => {
+        if (!this.catEngine) {
+          this.catEngine = new CatGameEngine(this.canvas, this.ctx, {
+            onLevelComplete: (nextLvl) => {
+              this.overworldController.unlockLevel(nextLvl);
+              this.overworldController.show();
+            }
+          });
+        }
+        this.catEngine.loadLevel(levelIdx);
+      }
+    );
+
     this.menuController = new MainMenuController((gameId) => {
       this.switchGameMode(gameId);
     });
@@ -77,12 +93,15 @@ class AntigamesApp {
       paletteCard.classList.add('hidden');
       if (marioCard) marioCard.classList.remove('hidden');
 
-      this.catEngine = new CatGameEngine(this.canvas, this.ctx, {
-        onLevelComplete: (nextLvl) => {
-          this.catEngine.loadLevel(nextLvl);
-        }
-      });
-      this.catEngine.loadLevel(0);
+      if (!this.catEngine) {
+        this.catEngine = new CatGameEngine(this.canvas, this.ctx, {
+          onLevelComplete: (nextLvl) => {
+            this.overworldController.unlockLevel(nextLvl);
+            this.overworldController.show();
+          }
+        });
+      }
+      this.overworldController.show();
     } else {
       if (marioCard) marioCard.classList.add('hidden');
       streamCard.classList.remove('hidden');

@@ -236,7 +236,28 @@ export class CatGameEngine {
           } else if (p.vy < 0) {
             p.y = (ty + 1) * TILE_SIZE;
             p.vy = 0;
+            this.handleHeadbuttBlock(tx, ty, p);
           }
+        }
+      }
+    }
+  }
+
+  handleHeadbuttBlock(tx, ty, player) {
+    for (const plat of this.level.platforms) {
+      if (tx >= plat.x && tx < plat.x + plat.w && ty >= plat.y && ty < plat.y + plat.h) {
+        if (plat.type === TILE.BLOCK_ITEM) {
+          plat.type = TILE.BLOCK_USED; // Change to used block
+          SFX.sfxGoalTriggered(2); // Play powerup chime sound!
+
+          // Spawn Mouse Power-Up right on top of the block!
+          this.mice.push({
+            x: tx * TILE_SIZE + 4,
+            y: (ty - 1) * TILE_SIZE + 8,
+            w: 20,
+            h: 16,
+            eaten: false,
+          });
         }
       }
     }
@@ -414,6 +435,8 @@ export class CatGameEngine {
         this.ctx.fillStyle = '#b85d19';
       } else if (plat.type === TILE.BLOCK_ITEM) {
         this.ctx.fillStyle = '#ffea00';
+      } else if (plat.type === TILE.BLOCK_USED) {
+        this.ctx.fillStyle = '#7a6644';
       } else if (plat.type === TILE.LILY_PAD) {
         this.ctx.fillStyle = '#00ff66';
       } else {
@@ -421,6 +444,12 @@ export class CatGameEngine {
       }
 
       this.ctx.fillRect(px, py, pw, ph);
+
+      if (plat.type === TILE.BLOCK_ITEM) {
+        this.ctx.fillStyle = '#000000';
+        this.ctx.font = 'bold 16px monospace';
+        this.ctx.fillText('?', px + pw / 2 - 4, py + ph - 8);
+      }
 
       // Top platform accent line
       this.ctx.fillStyle = this.level.platformColor;
