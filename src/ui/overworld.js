@@ -16,6 +16,9 @@ export class OverworldMapController {
     // Persistent Active Powerup inventory: 'MOUSE_BIG' | 'LASER_BELL' | 'CATNIP_SHIELD' | 'SUPER_WHISKERS'
     this.activePowerup = null;
 
+    // Persistent Big Cat State across levels!
+    this.isBigCat = false;
+
     this.isVisible = false;
   }
 
@@ -23,7 +26,9 @@ export class OverworldMapController {
     this.bindEvents();
   }
 
-  unlockNextLevel(worldIdx, levelNum) {
+  unlockNextLevel(worldIdx, levelNum, playerWasBig = false) {
+    this.isBigCat = playerWasBig; // Save Big Cat state across level transitions!
+
     if (levelNum >= 10 && worldIdx < 3) {
       // Completed World Fortress -> Unlock next World!
       this.unlockedLevels[worldIdx + 1] = Math.max(this.unlockedLevels[worldIdx + 1] || 0, 0);
@@ -88,7 +93,7 @@ export class OverworldMapController {
     this.hide();
 
     if (this.onSelectLevel) {
-      this.onSelectLevel(this.currentWorldIdx, node.levelNum - 1, this.playerCount, this.activePowerup);
+      this.onSelectLevel(this.currentWorldIdx, node.levelNum - 1, this.playerCount, this.activePowerup, this.isBigCat);
     }
   }
 
@@ -133,6 +138,7 @@ export class OverworldMapController {
     document.querySelectorAll('.gift-box-btn').forEach(btn => {
       btn.onclick = () => {
         this.activePowerup = randomP.id;
+        if (randomP.id === 'MOUSE_BIG') this.isBigCat = true;
         document.getElementById('gift-result-box').classList.remove('hidden');
         document.querySelectorAll('.gift-box-btn').forEach(b => b.disabled = true);
       };
@@ -191,7 +197,7 @@ export class OverworldMapController {
 
           gridHTML += `
             <div class="smb3-grid-cell node-cell ${isSelected ? 'selected' : isUnlocked ? 'unlocked' : 'locked'}" data-node-idx="${nodeIdx}">
-              <span class="cell-icon">${isSelected ? '🐱' : isUnlocked ? icon : '🔒'}</span>
+              <span class="cell-icon">${isSelected ? (this.isBigCat ? '🧍' : '🐱') : isUnlocked ? icon : '🔒'}</span>
               <span class="cell-num">${node.name}</span>
               ${isSelected ? '<span class="cell-pointer">▼</span>' : ''}
             </div>
@@ -237,7 +243,7 @@ export class OverworldMapController {
         <div class="overworld-details card">
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <h3>SELECTED: <span style="color:var(--neon-yellow);">${currentNode ? currentNode.name : 'Level 1'}</span></h3>
-            <span style="font-size:13px; color:var(--neon-cyan);">EQUIPPED: ${this.activePowerup ? powerupNames[this.activePowerup] : 'None'}</span>
+            <span style="font-size:13px; color:var(--neon-cyan);">STATE: ${this.isBigCat ? '🧍 Big Cat' : '🐱 Small Cat'} ${this.activePowerup ? '| ' + powerupNames[this.activePowerup] : ''}</span>
           </div>
           <p style="font-size:15px; color:var(--text-muted); margin-top:4px;">
             Mode: <strong>${this.playerCount === 1 ? '1-Player Solo Cat (WASD / Arrows)' : '2-Player Local Co-Op (P1: WASD | P2: Arrows)'}</strong>

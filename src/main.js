@@ -50,16 +50,16 @@ class AntigamesApp {
 
     this.overworldController = new OverworldMapController(
       document.getElementById('overworld-map-overlay'),
-      (worldIdx, levelIdx, playerCount, equippedPowerup) => {
+      (worldIdx, levelIdx, playerCount, equippedPowerup, isBigCat) => {
         if (!this.catEngine) {
           this.catEngine = new CatGameEngine(this.canvas, this.ctx, {
-            onLevelComplete: (completedWorld, nextLvl) => {
-              this.overworldController.unlockNextLevel(completedWorld, nextLvl);
+            onLevelComplete: (completedWorld, nextLvl, playerWasBig) => {
+              this.overworldController.unlockNextLevel(completedWorld, nextLvl, playerWasBig);
               this.overworldController.show();
             }
           });
         }
-        this.catEngine.loadLevel(worldIdx, levelIdx, playerCount, equippedPowerup);
+        this.catEngine.loadLevel(worldIdx, levelIdx, playerCount, equippedPowerup, isBigCat);
       }
     );
 
@@ -107,8 +107,8 @@ class AntigamesApp {
 
       if (!this.catEngine) {
         this.catEngine = new CatGameEngine(this.canvas, this.ctx, {
-          onLevelComplete: (completedWorld, nextLvl) => {
-            this.overworldController.unlockNextLevel(completedWorld, nextLvl);
+          onLevelComplete: (completedWorld, nextLvl, playerWasBig) => {
+            this.overworldController.unlockNextLevel(completedWorld, nextLvl, playerWasBig);
             this.overworldController.show();
           }
         });

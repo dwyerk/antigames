@@ -49,7 +49,7 @@ export class CatGameEngine {
     });
   }
 
-  loadLevel(worldIdx = 0, levelIdx = 0, playerCount = null, equippedPowerup = null) {
+  loadLevel(worldIdx = 0, levelIdx = 0, playerCount = null, equippedPowerup = null, startAsBigCat = false) {
     if (playerCount !== null) this.playerCount = playerCount;
     this.equippedPowerup = equippedPowerup;
 
@@ -62,7 +62,7 @@ export class CatGameEngine {
     const p2SpawnX = this.level.spawnP2.tileX * TILE_SIZE;
     const p2SpawnY = this.level.spawnP2.tileY * TILE_SIZE;
 
-    const isBigPowerup = equippedPowerup === 'MOUSE_BIG';
+    const isBig = startAsBigCat || equippedPowerup === 'MOUSE_BIG';
     const isHighJumpPowerup = equippedPowerup === 'SUPER_WHISKERS';
     const isShieldPowerup = equippedPowerup === 'CATNIP_SHIELD';
 
@@ -74,13 +74,13 @@ export class CatGameEngine {
         id: 1,
         name: 'Orange Tabby',
         x: p1SpawnX,
-        y: isBigPowerup ? p1SpawnY - 30 : p1SpawnY,
+        y: isBig ? p1SpawnY - 30 : p1SpawnY,
         vx: 0,
         vy: 0,
-        w: isBigPowerup ? 30 : 52,
-        h: isBigPowerup ? 56 : 26,
-        isBig: isBigPowerup,
-        jumpVel: isBigPowerup ? defaultBigJump : defaultJump,
+        w: isBig ? 30 : 52,
+        h: isBig ? 56 : 26,
+        isBig: isBig,
+        jumpVel: isBig ? defaultBigJump : defaultJump,
         isGrounded: false,
         invulnerableTimer: isShieldPowerup ? 600 : 0,
         color: '#ff9900',
@@ -95,13 +95,13 @@ export class CatGameEngine {
         id: 2,
         name: 'Shadow Cat',
         x: p2SpawnX,
-        y: isBigPowerup ? p2SpawnY - 30 : p2SpawnY,
+        y: isBig ? p2SpawnY - 30 : p2SpawnY,
         vx: 0,
         vy: 0,
-        w: isBigPowerup ? 30 : 52,
-        h: isBigPowerup ? 56 : 26,
-        isBig: isBigPowerup,
-        jumpVel: isBigPowerup ? defaultBigJump : defaultJump,
+        w: isBig ? 30 : 52,
+        h: isBig ? 56 : 26,
+        isBig: isBig,
+        jumpVel: isBig ? defaultBigJump : defaultJump,
         isGrounded: false,
         invulnerableTimer: isShieldPowerup ? 600 : 0,
         color: '#333b48',
@@ -418,7 +418,8 @@ export class CatGameEngine {
 
     SFX.sfxVictoryFanfare();
     if (this.callbacks.onLevelComplete) {
-      this.callbacks.onLevelComplete(this.worldIndex, this.levelIndex + 1);
+      const p1 = this.players[0];
+      this.callbacks.onLevelComplete(this.worldIndex, this.levelIndex + 1, p1 ? p1.isBig : false);
     }
   }
 
