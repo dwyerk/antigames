@@ -16,6 +16,8 @@ export class CatGameEngine {
     this.levelIndex = 0;
     this.level = null;
 
+    this.equippedPowerup = null;
+
     this.keys = {};
 
     this.players = [];
@@ -49,6 +51,7 @@ export class CatGameEngine {
 
   loadLevel(worldIdx = 0, levelIdx = 0, playerCount = null, equippedPowerup = null) {
     if (playerCount !== null) this.playerCount = playerCount;
+    this.equippedPowerup = equippedPowerup;
 
     this.worldIndex = worldIdx;
     this.levelIndex = levelIdx;
@@ -59,21 +62,27 @@ export class CatGameEngine {
     const p2SpawnX = this.level.spawnP2.tileX * TILE_SIZE;
     const p2SpawnY = this.level.spawnP2.tileY * TILE_SIZE;
 
-    const startAsBig = equippedPowerup === 'MOUSE_BIG';
+    const isBigPowerup = equippedPowerup === 'MOUSE_BIG';
+    const isHighJumpPowerup = equippedPowerup === 'SUPER_WHISKERS';
+    const isShieldPowerup = equippedPowerup === 'CATNIP_SHIELD';
+
+    const defaultJump = isHighJumpPowerup ? -14.5 : -11.0;
+    const defaultBigJump = isHighJumpPowerup ? -15.5 : -12.5;
 
     this.players = [
       {
         id: 1,
         name: 'Orange Tabby',
         x: p1SpawnX,
-        y: startAsBig ? p1SpawnY - 30 : p1SpawnY,
+        y: isBigPowerup ? p1SpawnY - 30 : p1SpawnY,
         vx: 0,
         vy: 0,
-        w: startAsBig ? 30 : 52,
-        h: startAsBig ? 56 : 26,
-        isBig: startAsBig,
+        w: isBigPowerup ? 30 : 52,
+        h: isBigPowerup ? 56 : 26,
+        isBig: isBigPowerup,
+        jumpVel: isBigPowerup ? defaultBigJump : defaultJump,
         isGrounded: false,
-        invulnerableTimer: equippedPowerup === 'CATNIP_SHIELD' ? 600 : 0,
+        invulnerableTimer: isShieldPowerup ? 600 : 0,
         color: '#ff9900',
         earColor: '#cc6600',
         score: 0,
@@ -86,14 +95,15 @@ export class CatGameEngine {
         id: 2,
         name: 'Shadow Cat',
         x: p2SpawnX,
-        y: startAsBig ? p2SpawnY - 30 : p2SpawnY,
+        y: isBigPowerup ? p2SpawnY - 30 : p2SpawnY,
         vx: 0,
         vy: 0,
-        w: startAsBig ? 30 : 52,
-        h: startAsBig ? 56 : 26,
-        isBig: startAsBig,
+        w: isBigPowerup ? 30 : 52,
+        h: isBigPowerup ? 56 : 26,
+        isBig: isBigPowerup,
+        jumpVel: isBigPowerup ? defaultBigJump : defaultJump,
         isGrounded: false,
-        invulnerableTimer: equippedPowerup === 'CATNIP_SHIELD' ? 600 : 0,
+        invulnerableTimer: isShieldPowerup ? 600 : 0,
         color: '#333b48',
         earColor: '#1a202c',
         score: 0,
@@ -128,6 +138,10 @@ export class CatGameEngine {
     this.laserActive = equippedPowerup === 'LASER_BELL';
     this.isStageComplete = false;
     this.isGameOver = false;
+
+    if (this.laserActive) {
+      SFX.sfxElectricitySpark();
+    }
   }
 
   update() {
@@ -143,7 +157,7 @@ export class CatGameEngine {
   updateLaserFrenzy() {
     this.laserTimer++;
 
-    // Random trigger for Laser Frenzy mode
+    // Random trigger for Laser Frenzy mode if not equipped
     if (!this.laserActive && this.laserTimer > 350 && Math.random() < 0.025) {
       this.laserActive = true;
       this.laserTimer = 0;
@@ -163,7 +177,7 @@ export class CatGameEngine {
         y: Math.max(100, Math.min(420, leadPlayer.y - 20 + oscY))
       };
 
-      if (this.laserTimer > 300) {
+      if (this.laserTimer > 400 && this.equippedPowerup !== 'LASER_BELL') {
         this.laserActive = false;
         this.laserDot = null;
       }
@@ -180,7 +194,7 @@ export class CatGameEngine {
     if (this.keys['KeyA'] || (this.playerCount === 1 && this.keys['ArrowLeft'])) p1.vx = -speed1;
     if (this.keys['KeyD'] || (this.playerCount === 1 && this.keys['ArrowRight'])) p1.vx = speed1;
     if ((this.keys['KeyW'] || (this.playerCount === 1 && this.keys['ArrowUp'])) && p1.isGrounded) {
-      p1.vy = p1.isBig ? -12.5 : -11.0;
+      p1.vy = p1.jumpVel;
       p1.isGrounded = false;
       SFX.sfxDropSand();
     }
@@ -195,7 +209,7 @@ export class CatGameEngine {
       if (this.keys['ArrowLeft']) p2.vx = -speed2;
       if (this.keys['ArrowRight']) p2.vx = speed2;
       if (this.keys['ArrowUp'] && p2.isGrounded) {
-        p2.vy = p2.isBig ? -12.5 : -11.0;
+        p2.vy = p2.jumpVel;
         p2.isGrounded = false;
         SFX.sfxDropSand();
       }
@@ -271,8 +285,8 @@ export class CatGameEngine {
     for (const plat of this.level.platforms) {
       if (tx >= plat.x && tx < plat.x + plat.w && ty >= plat.y && ty < plat.y + plat.h) {
         if (plat.type === TILE.BLOCK_ITEM) {
-          plat.type = TILE.BLOCK_USED; // Change to used block
-          SFX.sfxGoalTriggered(2); // Play powerup chime sound!
+          plat.type = TILE.BLOCK_USED;
+          SFX.sfxGoalTriggered(2);
 
           // Spawn Mouse Power-Up right on top of the block!
           this.mice.push({
@@ -290,12 +304,10 @@ export class CatGameEngine {
   isSolidTile(tx, ty, isBigCat = false) {
     if (tx < 0 || tx >= this.level.width || ty < 0 || ty >= this.level.height) return false;
 
-    // Check platform arrays
     for (const plat of this.level.platforms) {
       if (tx >= plat.x && tx < plat.x + plat.w && ty >= plat.y && ty < plat.y + plat.h) {
         if (plat.type === TILE.BRICK && isBigCat) {
-          // Big Cat breaks bricks!
-          plat.w = 0; // destroyed
+          plat.w = 0; // destroyed brick
           SFX.sfxAntiMatterExplode();
           return false;
         }
@@ -326,7 +338,8 @@ export class CatGameEngine {
           if (!p.isBig) {
             p.isBig = true;
             p.w = 30; // 1 block wide
-            p.h = 56; // 2 blocks tall (upright two legs)
+            p.h = 56; // 2 blocks tall
+            p.jumpVel = -12.5;
             p.y -= 30;
             SFX.sfxGoalTriggered(2);
           }
@@ -336,17 +349,14 @@ export class CatGameEngine {
       // 2. Dog Enemy Collisions
       this.dogs.forEach(d => {
         if (!d.defeated && this.checkAABB(p, d)) {
-          // Check if cat jumped on top of dog's head
           const jumpedOnHead = (p.vy > 0 && p.y + p.h - p.vy <= d.y + 14);
 
-          // ONLY defeat dogs if jumping on their head OR during Laser Frenzy mode!
-          if (jumpedOnHead || this.laserActive) {
+          if (jumpedOnHead || this.laserActive || p.invulnerableTimer > 0) {
             d.defeated = true;
             p.vy = -7.5; // Bounce up!
             p.score += 300;
             SFX.sfxGoalTriggered(1);
           } else {
-            // Take damage! (Big Cat shrinks back to Small Cat, Small Cat dies/respawns)
             this.handlePlayerDamage(p);
           }
         }
@@ -358,10 +368,11 @@ export class CatGameEngine {
     if (p.invulnerableTimer > 0) return;
 
     if (p.isBig) {
-      // Shrink back to Small Cat (All Fours, 52x26)
+      // Shrink back to Small Cat
       p.isBig = false;
       p.w = 52;
       p.h = 26;
+      p.jumpVel = -11.0;
       p.invulnerableTimer = 60; // 1 second invulnerability
       SFX.sfxAntiMatterExplode();
     } else {
@@ -415,10 +426,8 @@ export class CatGameEngine {
     if (!this.level) return;
 
     if (this.isSplitScreen && this.players[1]) {
-      // Draw Dual Split-Screen (P1 Left, P2 Right)
       const halfW = this.canvas.width / 2;
 
-      // P1 Viewport
       this.ctx.save();
       this.ctx.beginPath();
       this.ctx.rect(0, 0, halfW - 2, this.canvas.height);
@@ -426,7 +435,6 @@ export class CatGameEngine {
       this.renderViewport(this.cameraX1, 0, halfW);
       this.ctx.restore();
 
-      // P2 Viewport
       this.ctx.save();
       this.ctx.beginPath();
       this.ctx.rect(halfW + 2, 0, halfW - 2, this.canvas.height);
@@ -434,11 +442,9 @@ export class CatGameEngine {
       this.renderViewport(this.cameraX2, halfW + 2, halfW);
       this.ctx.restore();
 
-      // Draw Split-Screen Divider Line
       this.ctx.fillStyle = '#ff00aa';
       this.ctx.fillRect(halfW - 2, 0, 4, this.canvas.height);
     } else {
-      // Single Shared Camera
       const p1 = this.players[0];
       const p2 = this.players[1];
       const avgX = p2 ? (p1.x + p2.x) / 2 : p1.x;
@@ -535,12 +541,25 @@ export class CatGameEngine {
       this.ctx.restore();
     }
 
-    // 7. Draw Cats (Small Cat on All Fours 52x26 vs Big Cat Standing Upright 30x56)
+    // 7. Draw Cats (Small Cat 52x26 vs Big Cat 30x56 + Golden Shield Glow)
     this.players.forEach(p => {
       if (p.invulnerableTimer > 0 && Math.floor(p.invulnerableTimer / 4) % 2 === 0) return; // flash
 
       const cx = p.x - camX + screenOffsetX;
       const cy = p.y;
+
+      // Draw Golden Shield Aura if shield powerup active!
+      if (p.invulnerableTimer > 60) {
+        this.ctx.save();
+        this.ctx.strokeStyle = '#ffea00';
+        this.ctx.lineWidth = 3;
+        this.ctx.shadowColor = '#ffea00';
+        this.ctx.shadowBlur = 12;
+        this.ctx.beginPath();
+        this.ctx.arc(cx + p.w / 2, cy + p.h / 2, Math.max(p.w, p.h) / 2 + 8, 0, Math.PI * 2);
+        this.ctx.stroke();
+        this.ctx.restore();
+      }
 
       if (p.isBig) {
         // RENDER BIG CAT (Standing Upright on 2 Legs, 30x56 - 1 block wide, 2 blocks tall)

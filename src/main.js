@@ -172,6 +172,15 @@ class AntigamesApp {
     const resetBtn = document.getElementById('btn-reset');
     const openMapBtn = document.getElementById('btn-open-map');
     const restartCatBtn = document.getElementById('btn-restart-cat-level');
+    const catPlayPauseBtn = document.getElementById('btn-cat-play-pause');
+
+    if (catPlayPauseBtn) {
+      catPlayPauseBtn.onclick = () => {
+        this.isPlaying = !this.isPlaying;
+        catPlayPauseBtn.textContent = this.isPlaying ? '▶ Play' : '⏸ Pause';
+        catPlayPauseBtn.classList.toggle('active', this.isPlaying);
+      };
+    }
 
     if (openMapBtn) {
       openMapBtn.onclick = () => this.overworldController.show();
