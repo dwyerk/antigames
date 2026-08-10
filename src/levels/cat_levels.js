@@ -1,4 +1,4 @@
-// 4 Worlds x 10 Levels Each (40 Levels Total) for Super Mario Cat Co-Op Arcade
+// Distinct Hand-Crafted Levels for 4 Worlds x 10 Levels Each (40 Levels Total)
 export const TILE = {
   EMPTY: 0,
   GROUND: 1,      // Solid ground tile
@@ -103,40 +103,82 @@ export const WORLDS = [
   }
 ];
 
-// Generate Level Data for World W, Level L (250 tiles wide)
 export function getLevelData(worldIndex = 0, levelIndex = 0) {
   const world = WORLDS[worldIndex % WORLDS.length];
   const levelNum = (levelIndex % 10) + 1;
 
-  const platforms = [
-    // Ground floor
-    { x: 0, y: 15, w: 250, h: 3, type: TILE.GROUND },
-  ];
-
+  const platforms = [];
   const mice = [];
   const dogs = [];
 
-  // Generate 250-tile long level sections procedurally based on levelNum & theme
-  for (let sec = 0; sec < 12; sec++) {
-    const startX = 15 + sec * 20;
+  // World 1: Yarn Kingdom (Bouncy yarn platforms & low stepping hills)
+  if (worldIndex === 0) {
+    platforms.push({ x: 0, y: 15, w: 250, h: 3, type: TILE.GROUND });
+    for (let i = 0; i < 10; i++) {
+      const sx = 18 + i * 22;
+      platforms.push({ x: sx, y: 12 - (i % 3), w: 5 + (i % 3), h: 1, type: TILE.YARN_BALL });
+      platforms.push({ x: sx + 2, y: 9 - (i % 3), w: 1, h: 1, type: TILE.BLOCK_ITEM });
+      if (i % 2 === 0) {
+        platforms.push({ x: sx + 3, y: 9 - (i % 3), w: 3, h: 1, type: TILE.BRICK });
+      }
 
-    // Platform pattern
-    if (sec % 2 === 0) {
-      platforms.push({ x: startX, y: 12, w: 5, h: 1, type: world.theme === 'yarn' ? TILE.YARN_BALL : world.theme === 'fish' ? TILE.LILY_PAD : TILE.GROUND });
-      platforms.push({ x: startX + 6, y: 10, w: 1, h: 1, type: TILE.BLOCK_ITEM });
-      platforms.push({ x: startX + 7, y: 10, w: 3, h: 1, type: TILE.BRICK });
-    } else {
-      platforms.push({ x: startX, y: 11, w: 6, h: 1, type: TILE.GROUND });
-      platforms.push({ x: startX + 8, y: 10, w: 1, h: 1, type: TILE.BLOCK_ITEM });
+      mice.push({ tileX: sx + 1, tileY: 11 - (i % 3) });
+      dogs.push({ type: i % 2 === 0 ? 'corgi' : 'chihuahua', tileX: sx + 4, tileY: 14, range: 6, speed: 1.3 + (levelNum * 0.1) });
     }
+  }
 
-    // Spawn Mice
-    mice.push({ tileX: startX + 2, tileY: 10 });
+  // World 2: Catnip Forest (Giant mushroom towers & vine climbs)
+  else if (worldIndex === 1) {
+    platforms.push({ x: 0, y: 15, w: 250, h: 3, type: TILE.GROUND });
+    for (let i = 0; i < 10; i++) {
+      const sx = 20 + i * 22;
+      // Mushroom Stem & Top
+      const towerH = 4 + (i % 4);
+      platforms.push({ x: sx + 2, y: 15 - towerH, w: 2, h: towerH, type: TILE.GROUND });
+      platforms.push({ x: sx, y: 15 - towerH, w: 6, h: 1, type: TILE.GROUND });
+      platforms.push({ x: sx + 3, y: 12 - towerH, w: 1, h: 1, type: TILE.BLOCK_ITEM });
 
-    // Spawn Dog Enemies
-    const dogType = sec % 3 === 0 ? 'bulldog' : sec % 3 === 1 ? 'corgi' : 'chihuahua';
-    const speed = 1.2 + (levelNum * 0.1) + (sec % 2) * 0.5;
-    dogs.push({ type: dogType, tileX: startX + 5, tileY: 14, range: 6, speed });
+      mice.push({ tileX: sx + 1, tileY: 14 - towerH });
+      dogs.push({ type: 'chihuahua', tileX: sx + 8, tileY: 14, range: 7, speed: 1.8 });
+    }
+  }
+
+  // World 3: Fish Pond Alley (Water pits with floating lily pads)
+  else if (worldIndex === 2) {
+    // Ground with water pit gaps!
+    let curX = 0;
+    for (let i = 0; i < 10; i++) {
+      platforms.push({ x: curX, y: 15, w: 14, h: 3, type: TILE.GROUND });
+      curX += 14;
+
+      // Water Gap with floating Lily Pads!
+      const gapW = 8;
+      platforms.push({ x: curX, y: 16, w: gapW, h: 2, type: TILE.WATER });
+      platforms.push({ x: curX + 1, y: 13, w: 3, h: 1, type: TILE.LILY_PAD });
+      platforms.push({ x: curX + 4, y: 13, w: 3, h: 1, type: TILE.LILY_PAD });
+      platforms.push({ x: curX + 3, y: 9, w: 1, h: 1, type: TILE.BLOCK_ITEM });
+
+      mice.push({ tileX: curX + 2, tileY: 12 });
+      dogs.push({ type: 'bulldog', tileX: curX - 6, tileY: 14, range: 5, speed: 1.2 });
+      curX += gapW;
+    }
+    platforms.push({ x: curX, y: 15, w: 40, h: 3, type: TILE.GROUND });
+  }
+
+  // World 4: Dog Citadel (Fortress stone walls, brick pillars & heavy dog packs)
+  else {
+    platforms.push({ x: 0, y: 15, w: 250, h: 3, type: TILE.GROUND });
+    for (let i = 0; i < 10; i++) {
+      const sx = 20 + i * 22;
+      // Stone Fortress Wall
+      platforms.push({ x: sx, y: 11, w: 8, h: 4, type: TILE.GROUND });
+      platforms.push({ x: sx + 2, y: 8, w: 1, h: 1, type: TILE.BLOCK_ITEM });
+      platforms.push({ x: sx + 3, y: 8, w: 4, h: 1, type: TILE.BRICK });
+
+      mice.push({ tileX: sx + 4, tileY: 10 });
+      dogs.push({ type: 'bulldog', tileX: sx + 1, tileY: 10, range: 6, speed: 1.5 + (levelNum * 0.15) });
+      dogs.push({ type: 'corgi', tileX: sx + 10, tileY: 14, range: 7, speed: 1.8 });
+    }
   }
 
   return {

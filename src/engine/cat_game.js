@@ -67,8 +67,8 @@ export class CatGameEngine {
         y: p1SpawnY,
         vx: 0,
         vy: 0,
-        w: 24,
-        h: 28,
+        w: 52, // 2 blocks wide (all fours)
+        h: 26, // 1 block tall
         isBig: false,
         isGrounded: false,
         invulnerableTimer: 0,
@@ -87,8 +87,8 @@ export class CatGameEngine {
         y: p2SpawnY,
         vx: 0,
         vy: 0,
-        w: 24,
-        h: 28,
+        w: 52, // 2 blocks wide (all fours)
+        h: 26, // 1 block tall
         isBig: false,
         isGrounded: false,
         invulnerableTimer: 0,
@@ -316,15 +316,16 @@ export class CatGameEngine {
 
   updateCollisions() {
     this.players.forEach(p => {
-      // 1. Mouse catching -> Grow Big Cat!
+      // 1. Mouse catching -> Grow to Big Cat (Upright on 2 legs, 30x56)!
       this.mice.forEach(m => {
         if (!m.eaten && this.checkAABB(p, m)) {
           m.eaten = true;
           p.score += 500;
           if (!p.isBig) {
             p.isBig = true;
-            p.h = 44; // Grow to Big Cat!
-            p.y -= 16;
+            p.w = 30; // 1 block wide
+            p.h = 56; // 2 blocks tall (upright two legs)
+            p.y -= 30;
             SFX.sfxGoalTriggered(2);
           }
         }
@@ -337,7 +338,6 @@ export class CatGameEngine {
           const jumpedOnHead = (p.vy > 0 && p.y + p.h - p.vy <= d.y + 14);
 
           // ONLY defeat dogs if jumping on their head OR during Laser Frenzy mode!
-          // Big Cat does NOT automatically crush dogs on horizontal contact!
           if (jumpedOnHead || this.laserActive) {
             d.defeated = true;
             p.vy = -7.5; // Bounce up!
@@ -356,9 +356,10 @@ export class CatGameEngine {
     if (p.invulnerableTimer > 0) return;
 
     if (p.isBig) {
-      // Shrink back to Small Cat
+      // Shrink back to Small Cat (All Fours, 52x26)
       p.isBig = false;
-      p.h = 28;
+      p.w = 52;
+      p.h = 26;
       p.invulnerableTimer = 60; // 1 second invulnerability
       SFX.sfxAntiMatterExplode();
     } else {
@@ -532,42 +533,78 @@ export class CatGameEngine {
       this.ctx.restore();
     }
 
-    // 7. Draw Cats (P1 & P2)
+    // 7. Draw Cats (Small Cat on All Fours 52x26 vs Big Cat Standing Upright 30x56)
     this.players.forEach(p => {
       if (p.invulnerableTimer > 0 && Math.floor(p.invulnerableTimer / 4) % 2 === 0) return; // flash
 
       const cx = p.x - camX + screenOffsetX;
       const cy = p.y;
 
-      // Cat Body
-      this.ctx.fillStyle = p.color;
-      this.ctx.fillRect(cx, cy, p.w, p.h);
+      if (p.isBig) {
+        // RENDER BIG CAT (Standing Upright on 2 Legs, 30x56 - 1 block wide, 2 blocks tall)
+        this.ctx.fillStyle = p.color;
+        this.ctx.fillRect(cx, cy + 12, p.w, p.h - 22);
 
-      // Cat Ears
-      this.ctx.fillStyle = p.earColor;
-      this.ctx.beginPath();
-      this.ctx.moveTo(cx + 2, cy);
-      this.ctx.lineTo(cx + 8, cy - 8);
-      this.ctx.lineTo(cx + 12, cy);
-      this.ctx.fill();
+        // 2 Standing Legs
+        this.ctx.fillStyle = p.earColor;
+        this.ctx.fillRect(cx + 4, cy + p.h - 10, 8, 10);
+        this.ctx.fillRect(cx + 18, cy + p.h - 10, 8, 10);
 
-      this.ctx.beginPath();
-      this.ctx.moveTo(cx + p.w - 12, cy);
-      this.ctx.lineTo(cx + p.w - 8, cy - 8);
-      this.ctx.lineTo(cx + p.w - 2, cy);
-      this.ctx.fill();
+        // Overalls / Chest plate
+        this.ctx.fillStyle = '#ff0044';
+        this.ctx.fillRect(cx + 6, cy + 24, 18, 14);
 
-      // Cat Eyes
-      this.ctx.fillStyle = '#ffea00';
-      this.ctx.fillRect(cx + (p.vx >= 0 ? p.w - 10 : 4), cy + 6, 4, 4);
+        // Head on top
+        this.ctx.fillStyle = p.color;
+        this.ctx.fillRect(cx + 2, cy, 26, 20);
 
-      // Cat Tail
-      this.ctx.strokeStyle = p.color;
-      this.ctx.lineWidth = 3;
-      this.ctx.beginPath();
-      this.ctx.moveTo(cx + (p.vx >= 0 ? 2 : p.w - 2), cy + p.h - 6);
-      this.ctx.lineTo(cx + (p.vx >= 0 ? -8 : p.w + 8), cy + p.h - 14);
-      this.ctx.stroke();
+        // Ears on head
+        this.ctx.fillStyle = p.earColor;
+        this.ctx.beginPath();
+        this.ctx.moveTo(cx + 4, cy); this.ctx.lineTo(cx + 10, cy - 8); this.ctx.lineTo(cx + 14, cy); this.ctx.fill();
+        this.ctx.beginPath();
+        this.ctx.moveTo(cx + 16, cy); this.ctx.lineTo(cx + 20, cy - 8); this.ctx.lineTo(cx + 26, cy); this.ctx.fill();
+
+        // Eyes & Tail
+        this.ctx.fillStyle = '#ffea00';
+        this.ctx.fillRect(cx + (p.vx >= 0 ? 18 : 6), cy + 6, 6, 6);
+      } else {
+        // RENDER SMALL CAT (Walking on All Fours, 52x26 - 2 blocks wide, 1 block tall)
+        // Horizontal Body
+        this.ctx.fillStyle = p.color;
+        this.ctx.fillRect(cx + 8, cy + 6, 36, 14);
+
+        // 4 Paws (walking on all fours)
+        this.ctx.fillStyle = p.earColor;
+        this.ctx.fillRect(cx + 4, cy + 18, 6, 8);
+        this.ctx.fillRect(cx + 14, cy + 18, 6, 8);
+        this.ctx.fillRect(cx + 32, cy + 18, 6, 8);
+        this.ctx.fillRect(cx + 42, cy + 18, 6, 8);
+
+        // Head on front side
+        const headX = p.vx >= 0 ? cx + 32 : cx;
+        this.ctx.fillStyle = p.color;
+        this.ctx.fillRect(headX, cy + 2, 20, 16);
+
+        // Ears
+        this.ctx.fillStyle = p.earColor;
+        this.ctx.beginPath();
+        this.ctx.moveTo(headX + 2, cy + 2); this.ctx.lineTo(headX + 7, cy - 5); this.ctx.lineTo(headX + 11, cy + 2); this.ctx.fill();
+        this.ctx.beginPath();
+        this.ctx.moveTo(headX + 10, cy + 2); this.ctx.lineTo(headX + 15, cy - 5); this.ctx.lineTo(headX + 18, cy + 2); this.ctx.fill();
+
+        // Eyes & Tail
+        this.ctx.fillStyle = '#ffea00';
+        this.ctx.fillRect(headX + (p.vx >= 0 ? 12 : 3), cy + 6, 4, 4);
+
+        this.ctx.strokeStyle = p.color;
+        this.ctx.lineWidth = 3;
+        this.ctx.beginPath();
+        const tailX = p.vx >= 0 ? cx + 6 : cx + 46;
+        this.ctx.moveTo(tailX, cy + 10);
+        this.ctx.lineTo(tailX + (p.vx >= 0 ? -10 : 10), cy - 4);
+        this.ctx.stroke();
+      }
     });
   }
 }
