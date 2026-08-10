@@ -3,6 +3,7 @@ import { GRID_WIDTH, GRID_HEIGHT, CELL_SIZE, ELEMENT, ELEMENT_COLORS, ELEMENT_GL
 import { SimulationEngine } from './engine/simulation.js';
 import { generateVesselMask, VESSEL_TYPES } from './levels/bottles.js';
 import { generateTargetDesign, evaluateAccuracy } from './modes/procedural.js';
+import { CatGameEngine } from './engine/cat_game.js';
 import { Storage } from './storage.js';
 import { SFX } from './audio/sfx.js';
 import { UIController } from './ui/components.js';
@@ -14,9 +15,10 @@ class AntigamesApp {
     this.ctx = this.canvas.getContext('2d', { alpha: false });
 
     this.engine = new SimulationEngine();
+    this.catEngine = null;
 
     // App & Game Mode State
-    this.activeGameMode = 'pattern-arcade'; // 'pattern-arcade' | 'sandbox' | 'laser-puzzle'
+    this.activeGameMode = 'pattern-arcade'; // 'pattern-arcade' | 'sandbox' | 'laser-puzzle' | 'mario-cat'
 
     this.stageNumber = 1;
     this.score = 0;
@@ -63,27 +65,50 @@ class AntigamesApp {
     const badge = document.getElementById('game-mode-badge');
     const bpCard = document.getElementById('blueprint-card');
     const accCard = document.getElementById('accuracy-card');
+    const streamCard = document.getElementById('stream-card');
+    const paletteCard = document.getElementById('palette-card');
+    const marioCard = document.getElementById('mario-cat-card');
 
-    if (gameId === 'sandbox') {
-      badge.textContent = 'KINETIC SAND SANDBOX';
+    if (gameId === 'mario-cat') {
+      badge.textContent = 'SUPER MARIO CAT CO-OP';
       bpCard.classList.add('hidden');
       accCard.classList.add('hidden');
-      this.stageNumber = 1;
-      this.loadStage(1);
-    } else if (gameId === 'laser-puzzle') {
-      badge.textContent = 'LASER BOUNCE CHALLENGE';
-      bpCard.classList.remove('hidden');
-      accCard.classList.remove('hidden');
-      this.selectedElement = ELEMENT.LASER_SAND;
-      this.selectElement(ELEMENT.LASER_SAND);
-      this.stageNumber = 3;
-      this.loadStage(3);
+      streamCard.classList.add('hidden');
+      paletteCard.classList.add('hidden');
+      if (marioCard) marioCard.classList.remove('hidden');
+
+      this.catEngine = new CatGameEngine(this.canvas, this.ctx, {
+        onLevelComplete: (nextLvl) => {
+          this.catEngine.loadLevel(nextLvl);
+        }
+      });
+      this.catEngine.loadLevel(0);
     } else {
-      // Pattern Arcade
-      badge.textContent = 'SAND ART PATTERN ARCADE';
-      bpCard.classList.remove('hidden');
-      accCard.classList.remove('hidden');
-      this.startArcade();
+      if (marioCard) marioCard.classList.add('hidden');
+      streamCard.classList.remove('hidden');
+      paletteCard.classList.remove('hidden');
+
+      if (gameId === 'sandbox') {
+        badge.textContent = 'KINETIC SAND SANDBOX';
+        bpCard.classList.add('hidden');
+        accCard.classList.add('hidden');
+        this.stageNumber = 1;
+        this.loadStage(1);
+      } else if (gameId === 'laser-puzzle') {
+        badge.textContent = 'LASER BOUNCE CHALLENGE';
+        bpCard.classList.remove('hidden');
+        accCard.classList.remove('hidden');
+        this.selectedElement = ELEMENT.LASER_SAND;
+        this.selectElement(ELEMENT.LASER_SAND);
+        this.stageNumber = 3;
+        this.loadStage(3);
+      } else {
+        // Pattern Arcade
+        badge.textContent = 'SAND ART PATTERN ARCADE';
+        bpCard.classList.remove('hidden');
+        accCard.classList.remove('hidden');
+        this.startArcade();
+      }
     }
   }
 
@@ -133,7 +158,11 @@ class AntigamesApp {
     };
 
     resetBtn.onclick = () => {
-      this.resetVessel();
+      if (this.activeGameMode === 'mario-cat') {
+        this.catEngine.loadLevel(this.catEngine.levelIndex);
+      } else {
+        this.resetVessel();
+      }
     };
 
     // Canvas Mouse & Touch Pointer Drag Listeners
@@ -157,6 +186,8 @@ class AntigamesApp {
     });
 
     window.addEventListener('keydown', (e) => {
+      if (this.activeGameMode === 'mario-cat') return; // Handled by CatGameEngine
+
       if (e.code === 'Space' || e.code === 'Enter') {
         e.preventDefault();
         if (this.ui.isModalOpen || this.isStageComplete) {
@@ -348,7 +379,10 @@ class AntigamesApp {
       [VESSEL_TYPES.HOURGLASS]: 'Hourglass Chamber'
     };
 
-    if (this.activeGameMode === 'sandbox') {
+    if (this.activeGameMode === 'mario-cat') {
+      const lvlName = this.catEngine?.level?.name || 'Cat World';
+      document.getElementById('vessel-hint').textContent = `Super Mario Cat - Stage ${this.catEngine ? this.catEngine.levelIndex + 1 : 1}: ${lvlName}! (Reach the Golden Collar Goal Post)`;
+    } else if (this.activeGameMode === 'sandbox') {
       document.getElementById('vessel-hint').textContent = `Sandbox Mode: Create freeform sand art inside the ${vesselNames[this.vesselType] || 'Vessel'}!`;
     } else {
       document.getElementById('vessel-hint').textContent = `Stage ${this.stageNumber}: Emulate the target blueprint layers in the ${vesselNames[this.vesselType] || 'Vessel'}!`;
@@ -383,23 +417,34 @@ class AntigamesApp {
 
   startLoop() {
     const renderFrame = () => {
-      if (this.isPlaying) {
-        this.emitContinuousStream();
+      if (this.activeGameMode === 'mario-cat') {
+        if (this.catEngine) {
+          if (this.isPlaying) {
+            this.catEngine.update();
+          }
+          this.catEngine.render();
+          this.updateHUD();
+        }
+      } else {
+        if (this.isPlaying) {
+          this.emitContinuousStream();
 
-        for (let i = 0; i < this.simSpeed; i++) {
-          this.engine.step();
+          for (let i = 0; i < this.simSpeed; i++) {
+            this.engine.step();
+          }
+
+          this.currentFillPct = this.engine.getFillPercentage();
+          this.accuracyPct = evaluateAccuracy(this.engine.grid, GRID_WIDTH, GRID_HEIGHT, this.engine.innerMask, this.targetDesign);
+          this.updateHUD();
+
+          if (this.activeGameMode !== 'sandbox') {
+            this.checkStageCompletion();
+          }
         }
 
-        this.currentFillPct = this.engine.getFillPercentage();
-        this.accuracyPct = evaluateAccuracy(this.engine.grid, GRID_WIDTH, GRID_HEIGHT, this.engine.innerMask, this.targetDesign);
-        this.updateHUD();
-
-        if (this.activeGameMode !== 'sandbox') {
-          this.checkStageCompletion();
-        }
+        this.renderCanvas();
       }
 
-      this.renderCanvas();
       this.animFrameId = requestAnimationFrame(renderFrame);
     };
 
