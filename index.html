@@ -10,8 +10,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
 
-    <script type="module" crossorigin src="./assets/index-CptaVBAw.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-BdLw4rnM.css">
+    <script type="module" crossorigin src="./assets/index-Cy2NBj8Q.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-Wlqee8uo.css">
   </head>
   <body>
     <div id="app" class="crt-enabled">
@@ -130,6 +130,17 @@
             <div class="bottle-frame">
               <canvas id="sim-canvas" width="960" height="640"></canvas>
               <div id="crt-overlay" class="crt-lines"></div>
+
+              <!-- Virtual Mobile Touch Gamepad Controls -->
+              <div id="touch-gamepad" class="touch-gamepad hidden">
+                <div class="dpad-cluster">
+                  <button id="touch-left" class="touch-btn">⬅️</button>
+                  <button id="touch-right" class="touch-btn">➡️</button>
+                </div>
+                <div class="action-cluster">
+                  <button id="touch-jump" class="touch-btn action-btn">⬆️ JUMP</button>
+                </div>
+              </div>
             </div>
 
             <!-- Game-Specific Bottom Control Bars -->
