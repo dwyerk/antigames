@@ -50,11 +50,11 @@ class AntigamesApp {
 
     this.overworldController = new OverworldMapController(
       document.getElementById('overworld-map-overlay'),
-      (worldIdx, levelIdx, playerCount, equippedPowerup, isBigCat, isInvincibleMode, isSpeedrunMode) => {
+      (worldIdx, levelIdx, playerCount, equippedPowerup, isBigCat, isInvincibleMode, isSpeedrunMode, speedrunTotalTime) => {
         if (!this.catEngine) {
           this.catEngine = new CatGameEngine(this.canvas, this.ctx, {
-            onLevelComplete: (completedWorld, nextLvl, playerWasBig) => {
-              this.overworldController.unlockNextLevel(completedWorld, nextLvl, playerWasBig);
+            onLevelComplete: (completedWorld, nextLvl, playerWasBig, totalLevelTime) => {
+              this.overworldController.unlockNextLevel(completedWorld, nextLvl, playerWasBig, totalLevelTime);
               this.overworldController.show();
             }
           });
@@ -66,7 +66,8 @@ class AntigamesApp {
           equippedPowerup,
           isBigCat,
           isInvincibleMode,
-          isSpeedrunMode
+          isSpeedrunMode,
+          speedrunTotalTime
         );
       }
     );
@@ -115,8 +116,8 @@ class AntigamesApp {
 
       if (!this.catEngine) {
         this.catEngine = new CatGameEngine(this.canvas, this.ctx, {
-          onLevelComplete: (completedWorld, nextLvl, playerWasBig) => {
-            this.overworldController.unlockNextLevel(completedWorld, nextLvl, playerWasBig);
+          onLevelComplete: (completedWorld, nextLvl, playerWasBig, totalLevelTime) => {
+            this.overworldController.unlockNextLevel(completedWorld, nextLvl, playerWasBig, totalLevelTime);
             this.overworldController.show();
           }
         });

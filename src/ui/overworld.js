@@ -13,6 +13,7 @@ export class OverworldMapController {
     // Game Modifiers / Special Modes
     this.isInvincibleMode = false;
     this.isSpeedrunMode = false;
+    this.speedrunTotalTime = 0; // Cumulative speedrun time in ms across levels!
 
     // Highest unlocked level per world: { 0: 0, 1: 0, 2: 0, 3: 0 }
     this.unlockedLevels = { 0: 0, 1: 0, 2: 0, 3: 0 };
@@ -30,8 +31,11 @@ export class OverworldMapController {
     this.bindEvents();
   }
 
-  unlockNextLevel(worldIdx, levelNum, playerWasBig = false) {
+  unlockNextLevel(worldIdx, levelNum, playerWasBig = false, totalLevelTime = 0) {
     this.isBigCat = playerWasBig; // Save Big Cat state across level transitions!
+    if (this.isSpeedrunMode && totalLevelTime > 0) {
+      this.speedrunTotalTime = totalLevelTime; // Accumulate total speedrun time!
+    }
 
     if (levelNum >= 10 && worldIdx < 3) {
       // Completed World Fortress -> Unlock next World!
@@ -104,7 +108,8 @@ export class OverworldMapController {
         this.activePowerup,
         this.isBigCat,
         this.isInvincibleMode,
-        this.isSpeedrunMode
+        this.isSpeedrunMode,
+        this.speedrunTotalTime
       );
     }
   }
@@ -229,6 +234,8 @@ export class OverworldMapController {
       'SUPER_WHISKERS': '🐾 Super Whiskers',
     };
 
+    const formattedSpeedrunTime = (this.speedrunTotalTime / 1000).toFixed(3);
+
     this.container.innerHTML = `
       <div class="overworld-box retro-border smb3-map-box">
         <div class="overworld-header">
@@ -242,6 +249,7 @@ export class OverworldMapController {
           <button id="btn-mode-2p" class="retro-btn ${this.playerCount === 2 ? 'primary active' : ''}">🐱🐱 2-PLAYER</button>
           <button id="btn-toggle-invincible" class="retro-btn ${this.isInvincibleMode ? 'danger active' : ''}">🛡️ INVINCIBLE: ${this.isInvincibleMode ? 'ON' : 'OFF'}</button>
           <button id="btn-toggle-speedrun" class="retro-btn ${this.isSpeedrunMode ? 'primary active' : ''}">⚡ SPEEDRUN: ${this.isSpeedrunMode ? 'ON' : 'OFF'}</button>
+          ${this.isSpeedrunMode ? `<button id="btn-reset-speedrun" class="retro-btn danger" style="padding:4px 8px; font-size:12px;">🔄 RESET SPEEDRUN TIME (${formattedSpeedrunTime}s)</button>` : ''}
         </div>
 
         <!-- World Selection Tabs -->
@@ -260,7 +268,7 @@ export class OverworldMapController {
             <span style="font-size:13px; color:var(--neon-cyan);">STATE: ${this.isBigCat ? '🧍 Big Cat' : '🐱 Small Cat'} ${this.activePowerup ? '| ' + powerupNames[this.activePowerup] : ''}</span>
           </div>
           <p style="font-size:15px; color:var(--text-muted); margin-top:4px;">
-            Mode: <strong>${this.playerCount === 1 ? '1-Player Solo' : '2-Player Co-Op'}</strong> ${this.isInvincibleMode ? '| 🛡️ Infinite Invincibility' : ''} ${this.isSpeedrunMode ? '| ⚡ Speedrun Timer & 1.35x Speed' : ''}
+            Mode: <strong>${this.playerCount === 1 ? '1-Player Solo' : '2-Player Co-Op'}</strong> ${this.isInvincibleMode ? '| 🛡️ Invincible' : ''} ${this.isSpeedrunMode ? `| ⚡ Cumulative Speedrun Timer: <strong>${formattedSpeedrunTime}s</strong> (Paused on Map)` : ''}
           </p>
           <div class="modal-buttons" style="margin-top:10px;">
             <button id="btn-start-map-level" class="retro-btn primary">ENTER LEVEL ➔ [SPACEBAR]</button>
@@ -288,6 +296,14 @@ export class OverworldMapController {
       this.isSpeedrunMode = !this.isSpeedrunMode;
       this.render();
     };
+
+    const resetSpeedrunBtn = document.getElementById('btn-reset-speedrun');
+    if (resetSpeedrunBtn) {
+      resetSpeedrunBtn.onclick = () => {
+        this.speedrunTotalTime = 0;
+        this.render();
+      };
+    }
 
     document.querySelectorAll('.world-tab').forEach(tab => {
       tab.onclick = () => {

@@ -59,7 +59,8 @@ export class CatGameEngine {
     equippedPowerup = null,
     startAsBigCat = false,
     isInvincibleMode = false,
-    isSpeedrunMode = false
+    isSpeedrunMode = false,
+    speedrunStartTime = 0
   ) {
     if (playerCount !== null) this.playerCount = playerCount;
     this.equippedPowerup = equippedPowerup;
@@ -67,7 +68,7 @@ export class CatGameEngine {
     this.isSpeedrunMode = isSpeedrunMode;
 
     if (this.isSpeedrunMode) {
-      this.speedrunTime = 0;
+      this.speedrunTime = speedrunStartTime;
     }
 
     this.worldIndex = worldIdx;
@@ -444,7 +445,12 @@ export class CatGameEngine {
     SFX.sfxVictoryFanfare();
     if (this.callbacks.onLevelComplete) {
       const p1 = this.players[0];
-      this.callbacks.onLevelComplete(this.worldIndex, this.levelIndex + 1, p1 ? p1.isBig : false);
+      this.callbacks.onLevelComplete(
+        this.worldIndex,
+        this.levelIndex + 1,
+        p1 ? p1.isBig : false,
+        this.speedrunTime
+      );
     }
   }
 
