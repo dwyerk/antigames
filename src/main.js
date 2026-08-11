@@ -99,6 +99,7 @@ class AntigamesApp {
     const sandControls = document.getElementById('sim-sand-controls');
     const marioControls = document.getElementById('sim-mario-controls');
     const galleryBtn = document.getElementById('btn-gallery');
+    const touchGamepad = document.getElementById('touch-gamepad');
 
     if (gameId === 'mario-cat') {
       badge.textContent = 'SUPER MARIO CAT CO-OP';
@@ -107,6 +108,7 @@ class AntigamesApp {
       if (sandControls) sandControls.classList.add('hidden');
       if (marioControls) marioControls.classList.remove('hidden');
       if (galleryBtn) galleryBtn.classList.add('hidden');
+      if (touchGamepad) touchGamepad.classList.remove('hidden');
 
       bpCard.classList.add('hidden');
       accCard.classList.add('hidden');
@@ -202,6 +204,36 @@ class AntigamesApp {
         }
       };
     }
+
+    // Virtual Touch Gamepad Controls (Mobile & Tablets)
+    const touchLeft = document.getElementById('touch-left');
+    const touchRight = document.getElementById('touch-right');
+    const touchJump = document.getElementById('touch-jump');
+
+    const bindTouchBtn = (btn, keyCode) => {
+      if (!btn) return;
+      btn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        if (this.catEngine) this.catEngine.keys[keyCode] = true;
+      }, { passive: false });
+
+      btn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        if (this.catEngine) this.catEngine.keys[keyCode] = false;
+      }, { passive: false });
+
+      btn.addEventListener('mousedown', (e) => {
+        if (this.catEngine) this.catEngine.keys[keyCode] = true;
+      });
+
+      btn.addEventListener('mouseup', (e) => {
+        if (this.catEngine) this.catEngine.keys[keyCode] = false;
+      });
+    };
+
+    bindTouchBtn(touchLeft, 'KeyA');
+    bindTouchBtn(touchRight, 'KeyD');
+    bindTouchBtn(touchJump, 'KeyW');
 
     flowBtn.onclick = () => {
       this.streamEnabled = !this.streamEnabled;

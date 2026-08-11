@@ -977,3 +977,67 @@ body {
     text-align: center;
   }
 }
+
+/* ==========================================================================
+   VIRTUAL TOUCH GAMEPAD CONTROLS FOR MOBILE / TABLETS
+   ========================================================================== */
+.touch-gamepad {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.touch-gamepad .dpad-cluster,
+.touch-gamepad .action-cluster {
+  display: flex;
+  gap: 12px;
+  pointer-events: auto;
+}
+
+.touch-btn {
+  background: rgba(20, 24, 44, 0.85);
+  border: 3px solid var(--neon-cyan);
+  color: #fff;
+  font-family: var(--font-retro);
+  font-size: 24px;
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  touch-action: manipulation;
+  box-shadow: 0 4px 12px rgba(0, 240, 255, 0.4);
+  backdrop-filter: blur(4px);
+}
+
+.touch-btn.action-btn {
+  width: auto;
+  min-width: 100px;
+  padding: 0 16px;
+  font-size: 20px;
+  border-color: var(--neon-yellow);
+  color: var(--neon-yellow);
+  box-shadow: 0 4px 12px rgba(255, 234, 0, 0.4);
+}
+
+.touch-btn:active {
+  background: var(--neon-cyan);
+  color: #000;
+  transform: scale(0.92);
+}
+
+/* Force touch gamepad visible on touch devices or small screens */
+@media (max-width: 900px), (pointer: coarse) {
+  .touch-gamepad:not(.hidden) {
+    display: flex !important;
+  }
+}
