@@ -50,7 +50,7 @@ class AntigamesApp {
 
     this.overworldController = new OverworldMapController(
       document.getElementById('overworld-map-overlay'),
-      (worldIdx, levelIdx, playerCount, equippedPowerup, isBigCat) => {
+      (worldIdx, levelIdx, playerCount, equippedPowerup, isBigCat, isInvincibleMode, isSpeedrunMode) => {
         if (!this.catEngine) {
           this.catEngine = new CatGameEngine(this.canvas, this.ctx, {
             onLevelComplete: (completedWorld, nextLvl, playerWasBig) => {
@@ -59,7 +59,15 @@ class AntigamesApp {
             }
           });
         }
-        this.catEngine.loadLevel(worldIdx, levelIdx, playerCount, equippedPowerup, isBigCat);
+        this.catEngine.loadLevel(
+          worldIdx,
+          levelIdx,
+          playerCount,
+          equippedPowerup,
+          isBigCat,
+          isInvincibleMode,
+          isSpeedrunMode
+        );
       }
     );
 

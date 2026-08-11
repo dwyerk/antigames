@@ -17,6 +17,9 @@ export class CatGameEngine {
     this.level = null;
 
     this.equippedPowerup = null;
+    this.isInvincibleMode = false;
+    this.isSpeedrunMode = false;
+    this.speedrunTime = 0;
 
     this.keys = {};
 
@@ -49,9 +52,23 @@ export class CatGameEngine {
     });
   }
 
-  loadLevel(worldIdx = 0, levelIdx = 0, playerCount = null, equippedPowerup = null, startAsBigCat = false) {
+  loadLevel(
+    worldIdx = 0,
+    levelIdx = 0,
+    playerCount = null,
+    equippedPowerup = null,
+    startAsBigCat = false,
+    isInvincibleMode = false,
+    isSpeedrunMode = false
+  ) {
     if (playerCount !== null) this.playerCount = playerCount;
     this.equippedPowerup = equippedPowerup;
+    this.isInvincibleMode = isInvincibleMode;
+    this.isSpeedrunMode = isSpeedrunMode;
+
+    if (this.isSpeedrunMode) {
+      this.speedrunTime = 0;
+    }
 
     this.worldIndex = worldIdx;
     this.levelIndex = levelIdx;
@@ -69,6 +86,8 @@ export class CatGameEngine {
     const defaultJump = isHighJumpPowerup ? -14.5 : -11.0;
     const defaultBigJump = isHighJumpPowerup ? -15.5 : -12.5;
 
+    const initialInvulnerable = this.isInvincibleMode ? 999999 : (isShieldPowerup ? 600 : 0);
+
     this.players = [
       {
         id: 1,
@@ -82,7 +101,7 @@ export class CatGameEngine {
         isBig: isBig,
         jumpVel: isBig ? defaultBigJump : defaultJump,
         isGrounded: false,
-        invulnerableTimer: isShieldPowerup ? 600 : 0,
+        invulnerableTimer: initialInvulnerable,
         color: '#ff9900',
         earColor: '#cc6600',
         score: 0,
@@ -103,7 +122,7 @@ export class CatGameEngine {
         isBig: isBig,
         jumpVel: isBig ? defaultBigJump : defaultJump,
         isGrounded: false,
-        invulnerableTimer: isShieldPowerup ? 600 : 0,
+        invulnerableTimer: initialInvulnerable,
         color: '#333b48',
         earColor: '#1a202c',
         score: 0,
@@ -147,6 +166,10 @@ export class CatGameEngine {
   update() {
     if (this.isGameOver || this.isStageComplete || !this.level) return;
 
+    if (this.isSpeedrunMode) {
+      this.speedrunTime += 16.66;
+    }
+
     this.updateLaserFrenzy();
     this.updatePlayers();
     this.updateDogs();
@@ -188,6 +211,7 @@ export class CatGameEngine {
     // Player 1 Controls (WASD or Arrow keys in 1P mode)
     const p1 = this.players[0];
     let speed1 = p1.isBig ? 4.5 : 3.8;
+    if (this.isSpeedrunMode) speed1 *= 1.35; // Speedrun speed boost!
     if (this.laserActive) speed1 *= 1.45; // Laser Frenzy speed boost
 
     p1.vx = 0;
@@ -203,6 +227,7 @@ export class CatGameEngine {
     if (this.playerCount >= 2 && this.players[1]) {
       const p2 = this.players[1];
       let speed2 = p2.isBig ? 4.5 : 3.8;
+      if (this.isSpeedrunMode) speed2 *= 1.35;
       if (this.laserActive) speed2 *= 1.45;
 
       p2.vx = 0;
@@ -217,7 +242,7 @@ export class CatGameEngine {
 
     // Apply gravity & physics
     this.players.forEach(p => {
-      if (p.invulnerableTimer > 0) p.invulnerableTimer--;
+      if (p.invulnerableTimer > 0 && !this.isInvincibleMode) p.invulnerableTimer--;
 
       p.vy += GRAVITY;
       p.x += p.vx;
@@ -351,7 +376,7 @@ export class CatGameEngine {
         if (!d.defeated && this.checkAABB(p, d)) {
           const jumpedOnHead = (p.vy > 0 && p.y + p.h - p.vy <= d.y + 14);
 
-          if (jumpedOnHead || this.laserActive || p.invulnerableTimer > 0) {
+          if (jumpedOnHead || this.laserActive || p.invulnerableTimer > 0 || this.isInvincibleMode) {
             d.defeated = true;
             p.vy = -7.5; // Bounce up!
             p.score += 300;
@@ -365,7 +390,7 @@ export class CatGameEngine {
   }
 
   handlePlayerDamage(p) {
-    if (p.invulnerableTimer > 0) return;
+    if (p.invulnerableTimer > 0 || this.isInvincibleMode) return;
 
     if (p.isBig) {
       // Shrink back to Small Cat
@@ -459,7 +484,19 @@ export class CatGameEngine {
     this.ctx.fillStyle = this.level.bgColor;
     this.ctx.fillRect(screenOffsetX, 0, viewportWidth, this.canvas.height);
 
-    // 2. Draw Level Platforms & Tiles
+    // 2. Draw Speedrun HUD Timer Overlay if active!
+    if (this.isSpeedrunMode) {
+      const totalSec = (this.speedrunTime / 1000).toFixed(3);
+      this.ctx.save();
+      this.ctx.fillStyle = '#00f0ff';
+      this.ctx.font = 'bold 18px monospace';
+      this.ctx.shadowColor = '#00f0ff';
+      this.ctx.shadowBlur = 8;
+      this.ctx.fillText(`⚡ SPEEDRUN TIME: ${totalSec}s`, screenOffsetX + 16, 34);
+      this.ctx.restore();
+    }
+
+    // 3. Draw Level Platforms & Tiles
     this.level.platforms.forEach(plat => {
       if (plat.w === 0) return; // destroyed brick
 
@@ -495,7 +532,7 @@ export class CatGameEngine {
       this.ctx.fillRect(px, py, pw, 4);
     });
 
-    // 3. Draw Golden Collar Goal Post
+    // 4. Draw Golden Collar Goal Post
     const gx = this.level.goalX * TILE_SIZE - camX + screenOffsetX;
     this.ctx.fillStyle = '#ffea00';
     this.ctx.fillRect(gx, 250, 8, 230);
@@ -504,7 +541,7 @@ export class CatGameEngine {
     this.ctx.arc(gx + 4, 250, 16, 0, Math.PI * 2);
     this.ctx.fill();
 
-    // 4. Draw Mice
+    // 5. Draw Mice
     this.mice.forEach(m => {
       if (m.eaten) return;
       const mx = m.x - camX + screenOffsetX;
@@ -516,7 +553,7 @@ export class CatGameEngine {
       this.ctx.fillRect(mx + 13, m.y - 4, 5, 5);
     });
 
-    // 5. Draw Dog Enemies
+    // 6. Draw Dog Enemies
     this.dogs.forEach(d => {
       if (d.defeated) return;
       const dx = d.x - camX + screenOffsetX;
@@ -529,7 +566,7 @@ export class CatGameEngine {
       this.ctx.fillRect(dx + 2, d.y + 4, d.w - 4, 4);
     });
 
-    // 6. Draw AI Laser Frenzy Red Dot (Positioned 180px in front of leading player)
+    // 7. Draw AI Laser Frenzy Red Dot (Positioned 180px in front of leading player)
     if (this.laserActive && this.laserDot) {
       const lx = this.laserDot.x - camX + screenOffsetX;
       this.ctx.save();
@@ -542,20 +579,20 @@ export class CatGameEngine {
       this.ctx.restore();
     }
 
-    // 7. Draw Cats (Small Cat 52x26 vs Big Cat 30x56 + Golden Shield Glow)
+    // 8. Draw Cats (Small Cat 52x26 vs Big Cat 30x56 + Shield Aura)
     this.players.forEach(p => {
-      if (p.invulnerableTimer > 0 && Math.floor(p.invulnerableTimer / 4) % 2 === 0) return; // flash
+      if (p.invulnerableTimer > 0 && !this.isInvincibleMode && Math.floor(p.invulnerableTimer / 4) % 2 === 0) return;
 
       const cx = p.x - camX + screenOffsetX;
       const cy = p.y;
 
-      // Draw Golden Shield Aura if shield powerup active!
-      if (p.invulnerableTimer > 60) {
+      // Draw Golden Shield Aura if shield powerup OR Invincible Mode active!
+      if (p.invulnerableTimer > 60 || this.isInvincibleMode) {
         this.ctx.save();
-        this.ctx.strokeStyle = '#ffea00';
+        this.ctx.strokeStyle = this.isInvincibleMode ? '#00f0ff' : '#ffea00';
         this.ctx.lineWidth = 3;
-        this.ctx.shadowColor = '#ffea00';
-        this.ctx.shadowBlur = 12;
+        this.ctx.shadowColor = this.isInvincibleMode ? '#00f0ff' : '#ffea00';
+        this.ctx.shadowBlur = 14;
         this.ctx.beginPath();
         this.ctx.arc(cx + p.w / 2, cy + p.h / 2, Math.max(p.w, p.h) / 2 + 8, 0, Math.PI * 2);
         this.ctx.stroke();
@@ -563,7 +600,7 @@ export class CatGameEngine {
       }
 
       if (p.isBig) {
-        // RENDER BIG CAT (Standing Upright on 2 Legs, 30x56 - 1 block wide, 2 blocks tall)
+        // RENDER BIG CAT (Standing Upright on 2 Legs, 30x56)
         this.ctx.fillStyle = p.color;
         this.ctx.fillRect(cx, cy + 12, p.w, p.h - 22);
 
@@ -591,12 +628,11 @@ export class CatGameEngine {
         this.ctx.fillStyle = '#ffea00';
         this.ctx.fillRect(cx + (p.vx >= 0 ? 18 : 6), cy + 6, 6, 6);
       } else {
-        // RENDER SMALL CAT (Walking on All Fours, 52x26 - 2 blocks wide, 1 block tall)
-        // Horizontal Body
+        // RENDER SMALL CAT (Walking on All Fours, 52x26)
         this.ctx.fillStyle = p.color;
         this.ctx.fillRect(cx + 8, cy + 6, 36, 14);
 
-        // 4 Paws (walking on all fours)
+        // 4 Paws
         this.ctx.fillStyle = p.earColor;
         this.ctx.fillRect(cx + 4, cy + 18, 6, 8);
         this.ctx.fillRect(cx + 14, cy + 18, 6, 8);

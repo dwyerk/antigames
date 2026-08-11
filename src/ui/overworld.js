@@ -10,6 +10,10 @@ export class OverworldMapController {
     this.currentWorldIdx = 0;
     this.currentNodeIdx = 0;
 
+    // Game Modifiers / Special Modes
+    this.isInvincibleMode = false;
+    this.isSpeedrunMode = false;
+
     // Highest unlocked level per world: { 0: 0, 1: 0, 2: 0, 3: 0 }
     this.unlockedLevels = { 0: 0, 1: 0, 2: 0, 3: 0 };
 
@@ -93,7 +97,15 @@ export class OverworldMapController {
     this.hide();
 
     if (this.onSelectLevel) {
-      this.onSelectLevel(this.currentWorldIdx, node.levelNum - 1, this.playerCount, this.activePowerup, this.isBigCat);
+      this.onSelectLevel(
+        this.currentWorldIdx,
+        node.levelNum - 1,
+        this.playerCount,
+        this.activePowerup,
+        this.isBigCat,
+        this.isInvincibleMode,
+        this.isSpeedrunMode
+      );
     }
   }
 
@@ -224,10 +236,12 @@ export class OverworldMapController {
           <h2 style="font-size:18px; color:var(--neon-yellow);">${world.name}</h2>
         </div>
 
-        <!-- Player Count Selector (1P Solo vs 2P Local Co-Op) -->
-        <div class="player-mode-toggle">
-          <button id="btn-mode-1p" class="retro-btn ${this.playerCount === 1 ? 'primary active' : ''}">🐱 1-PLAYER SOLO</button>
-          <button id="btn-mode-2p" class="retro-btn ${this.playerCount === 2 ? 'primary active' : ''}">🐱🐱 2-PLAYER LOCAL CO-OP</button>
+        <!-- Player Mode & Modifier Selectors -->
+        <div class="player-mode-toggle" style="flex-wrap:wrap; gap:8px;">
+          <button id="btn-mode-1p" class="retro-btn ${this.playerCount === 1 ? 'primary active' : ''}">🐱 1-PLAYER</button>
+          <button id="btn-mode-2p" class="retro-btn ${this.playerCount === 2 ? 'primary active' : ''}">🐱🐱 2-PLAYER</button>
+          <button id="btn-toggle-invincible" class="retro-btn ${this.isInvincibleMode ? 'danger active' : ''}">🛡️ INVINCIBLE: ${this.isInvincibleMode ? 'ON' : 'OFF'}</button>
+          <button id="btn-toggle-speedrun" class="retro-btn ${this.isSpeedrunMode ? 'primary active' : ''}">⚡ SPEEDRUN: ${this.isSpeedrunMode ? 'ON' : 'OFF'}</button>
         </div>
 
         <!-- World Selection Tabs -->
@@ -246,7 +260,7 @@ export class OverworldMapController {
             <span style="font-size:13px; color:var(--neon-cyan);">STATE: ${this.isBigCat ? '🧍 Big Cat' : '🐱 Small Cat'} ${this.activePowerup ? '| ' + powerupNames[this.activePowerup] : ''}</span>
           </div>
           <p style="font-size:15px; color:var(--text-muted); margin-top:4px;">
-            Mode: <strong>${this.playerCount === 1 ? '1-Player Solo Cat (WASD / Arrows)' : '2-Player Local Co-Op (P1: WASD | P2: Arrows)'}</strong>
+            Mode: <strong>${this.playerCount === 1 ? '1-Player Solo' : '2-Player Co-Op'}</strong> ${this.isInvincibleMode ? '| 🛡️ Infinite Invincibility' : ''} ${this.isSpeedrunMode ? '| ⚡ Speedrun Timer & 1.35x Speed' : ''}
           </p>
           <div class="modal-buttons" style="margin-top:10px;">
             <button id="btn-start-map-level" class="retro-btn primary">ENTER LEVEL ➔ [SPACEBAR]</button>
@@ -262,6 +276,16 @@ export class OverworldMapController {
 
     document.getElementById('btn-mode-2p').onclick = () => {
       this.playerCount = 2;
+      this.render();
+    };
+
+    document.getElementById('btn-toggle-invincible').onclick = () => {
+      this.isInvincibleMode = !this.isInvincibleMode;
+      this.render();
+    };
+
+    document.getElementById('btn-toggle-speedrun').onclick = () => {
+      this.isSpeedrunMode = !this.isSpeedrunMode;
       this.render();
     };
 
